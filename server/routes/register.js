@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const pool = require('../db');
-const { supabase } = require('../../src/lib/supabase');
+const { supabase } = require('../lib/supabase');
 
 router.post("/", async(req, res) => {
     const { email, password, username } = req.body;
