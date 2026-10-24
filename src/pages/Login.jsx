@@ -1,14 +1,21 @@
 import "./Login.css";
 import loginTitle from "../assets/login.svg";
-import { useNavigate} from 'react-router'
+import { useNavigate } from 'react-router';
 
 function Login() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const handleLanding = () => navigate('/landing');
+  const handleLogin = () => navigate('/dashboard');
 
-  const handleLogin = () => navigate('/dashboard')
+  return (
 
-    return (
+    <div>
+
+
     <div className="login-page">
+      <button className="back-btn" onClick={handleLanding}>
+        {"<"}
+      </button>
 
       <div className="login-card">
 
@@ -31,6 +38,7 @@ function Login() {
         </div>
 
       </div>
+    </div>
     </div>
   );
 }
