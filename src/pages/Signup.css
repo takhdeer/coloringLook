@@ -83,16 +83,18 @@
   transform: scale(0.98);
 }
 
-.back-btn {
-  position: absolute;
-  top: 16px;
-  left: 40px;
-  font-size: 5rem;
-  background: none;
-  border: none;
+.signup-error,
+.signup-notice {
+  text-align: center;
+  font-weight: 700;
+  margin: 0 0 1rem;
 }
 
-.back-btn:hover {
-  background: fixed;
-  transform: scale(1.1);
+.signup-error {
+  color: #b00020;
+}
+
+.signup-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
