@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import './PlayMembersColumn.css'
+import { startTestPlayers } from './playMembersTestData' // TEST
 
 const MAX_PLAYERS = 5
 const POLL_MS = 3000
@@ -12,6 +13,7 @@ export default function PlayMembersColumn({ groupId }) {
 
     // Poll the server so the board reorders as scores change
     useEffect(() => {
+        if (!groupId) return startTestPlayers(setPlayers) // TEST
         if (!groupId) return
         let cancelled = false
 

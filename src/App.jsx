@@ -14,6 +14,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/landing" />} />
           <Route path="/landing" element={<Landing />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/play" element={<Play />} /> {/* TEST: fake leaderboard players */}
           <Route path="/play/:groupId" element={<Play />} />
         </Routes>
       </BrowserRouter>
