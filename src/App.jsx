@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
+import CreateGroup from './components/createGroup';
+import JoinGroup from './components/joinGroup';
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
@@ -13,6 +15,8 @@ export default function App() {
           <Route path="/" element={<Navigate to="/landing" />} />
           <Route path="/landing" element={<Landing />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/groups" element={<CreateGroup />} />
+          <Route path="/join" element={<JoinGroup />} />
         </Routes>
       </BrowserRouter>
     )

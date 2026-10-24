@@ -1,0 +1,59 @@
+/* Builds on the paper/ink theme in Dashboard.css */
+
+.join-group-back {
+    position: absolute;
+    top: 16px;
+    left: 40px;
+    font-family: inherit;
+    font-size: 5rem;
+    color: #111;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.join-group-back:hover {
+    transform: scale(1.1);
+}
+
+.join-group-card {
+    width: 100%;
+    max-width: 400px;
+    text-align: left;
+}
+
+.join-group-field {
+    padding-bottom: 1.5rem;
+}
+
+.join-group-card .form-label {
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.join-group-card .form-control {
+    font-family: inherit;
+    font-size: 16px;
+    color: #111;
+    background: rgba(255, 255, 255, 0.5);
+    border: 2px solid #111;
+    border-radius: 12px;
+}
+
+.join-group-card .form-control:focus {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: #111;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.15);
+}
+
+.join-group-error {
+    margin: 0 0 1rem;
+    font-weight: 700;
+    color: #8b1e1e;
+}
+
+.join-group-submit {
+    display: flex;
+    justify-content: center;
+    padding-top: 0.5rem;
+}

@@ -50,7 +50,8 @@
 }
 
 .email-form,
-.password-form {
+.password-form, 
+.username-form {
   padding-bottom: 1.5rem;
 }
 
