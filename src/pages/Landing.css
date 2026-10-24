@@ -10,15 +10,20 @@
     gap: 40px;
     font-family: 'Comic Sans MS', 'Comic Neue', cursive;
     color: #111;
-    /* Placeholder paper colour until the background SVG is added */
-    background-color: #e8e3d8;
+    /* Paper colour shows while the texture tile loads */
+    background: #e8e3d8 url('../assets/paper-texture.svg') repeat;
 }
 
 .landing-logo {
     margin: 0;
-    font-family: inherit;
-    font-size: clamp(40px, 8vw, 96px);
-    color: #111;
+    width: 100%;
+    max-width: 800px;
+}
+
+.landing-logo img {
+    display: block;
+    width: 100%;
+    height: auto;
 }
 
 .landing-tagline {

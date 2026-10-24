@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router'
 import './Landing.css'
+import logo from '../assets/coloringlook-logo.svg'
 
 export default function Landing() {
     const navigate = useNavigate()
@@ -10,8 +11,9 @@ export default function Landing() {
 
     return (
         <div className="landing">
-            {/* TODO: replace with the ColoringLook logo SVG */}
-            <h1 className="landing-logo">ColoringLook</h1>
+            <h1 className="landing-logo">
+                <img src={logo} alt="ColoringLook" />
+            </h1>
 
             <p className="landing-tagline">get out and color !!</p>
 

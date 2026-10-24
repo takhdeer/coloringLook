@@ -10,8 +10,8 @@
     gap: 40px;
     font-family: 'Comic Sans MS', 'Comic Neue', cursive;
     color: #111;
-    /* Placeholder paper colour until the background SVG is added */
-    background-color: #e8e3d8;
+    /* Paper colour shows while the texture tile loads */
+    background: #e8e3d8 url('../assets/paper-texture.svg') repeat;
 }
 
 .dashboard-title {
