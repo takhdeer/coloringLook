@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "client": "vite",
-    "server": "nodemon server/index.cjs"
+    "server": "nodemon server/index.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

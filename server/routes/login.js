@@ -1,6 +1,6 @@
 const express = require("express")
 const router = express.Router()
-const { supabase } = require('../../src/lib/supabase')
+const { supabase } = require('../lib/supabase')
 
 router.post('/', async (req, res) => {
     const { email, password } = req.body
