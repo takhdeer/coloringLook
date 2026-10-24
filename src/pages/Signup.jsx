@@ -1,15 +1,20 @@
 import "./Signup.css";
 import signUpTitle from "../assets/sign-up.svg";
-import { useNavigate} from 'react-router'
+import { useNavigate } from 'react-router';
+
 
 function Signup() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const handleLanding = () => navigate('/landing');
+  const handleLogin = () => navigate('/dashboard');
 
-  const handleLogin = () => navigate('/dashboard')
-  
   return (
-    <div className="signup-page">
+    <div>
 
+    <div className="signup-page">
+      <button className="back-btn" onClick={handleLanding}>
+        {"<"}
+      </button>
       <div className="signup-card">
 
       <h1 className="signup-header">
@@ -41,6 +46,7 @@ function Signup() {
         </div>
 
       </div>
+    </div>
     </div>
   );
 }
