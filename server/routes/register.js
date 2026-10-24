@@ -5,9 +5,11 @@ const { supabase } = require('../../src/lib/supabase');
 
 router.post("/", async(req, res) => {
     const { email, password, username } = req.body;
+
     if (!email || !password || !username)  {
-        return res.status(400).json({ message: "Email and password are required" });
+        return res.status(400).json({ message: "Email, password and Username are required" });
     }
+    
     try {
       const { data, error } = await supabase.auth.signUp({
         username,

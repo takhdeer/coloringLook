@@ -11,10 +11,12 @@ app.use(express.json());
 
 // Routes
 const registerRoute = require('./routes/register');
+const loginRoute = require('./routes/login')
 
 
 // Endpoints
 app.use('/api/register', registerRoute);
+app.use('/api/login', loginRoute)
 
 // Test endpoints 
 app.get("/db-test", async (_req, res) => {
