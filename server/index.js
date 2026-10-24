@@ -16,6 +16,7 @@ const createGroup = require('./routes/groups/createGroup')
 const deleteGroup = require('./routes/groups/deleteGroup')
 const leaderboard = require('./routes/groups/leaderboard')
 const joinGroup = require('./routes/groups/joinGroup')
+const getUserGroup = require('./routes/groups/getUserGroup')
 const pixelate = require('./routes/pixelate')
 
 
@@ -26,6 +27,7 @@ app.use('/api/createGroup', createGroup);
 app.use('/api/deleteGroup', deleteGroup);
 app.use('/api/leaderboard', leaderboard);
 app.use('/api/joinGroup', joinGroup);
+app.use('/api/getUserGroup', getUserGroup);
 app.use('/api/pixelate', pixelate);
 
 // Test endpoints 

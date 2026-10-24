@@ -2,6 +2,7 @@ import { useParams } from 'react-router'
 import './Play.css'
 import logo from '../assets/coloringlook-logo.svg'
 import PlayMembersColumn from './PlayMembersColumn'
+import ViewGroups from '../components/ViewGroups'
 import PlayPicture from './PlayPicture'
 
 export default function Play() {
@@ -15,7 +16,9 @@ export default function Play() {
 
             <main className="play-columns">
                 {/* TODO: left column content */}
-                <section className="play-col play-side" />
+                <section className="play-col play-side">
+                    <ViewGroups />
+                </section>
 
                 <section className="play-col play-main">
                     <PlayPicture />
