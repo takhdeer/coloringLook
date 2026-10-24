@@ -40,14 +40,9 @@ router.post("/", async(req, res) => {
       console.log(authUserID)
 
       await pool.query(
-        'INSERT INTO users (email, password, username) VALUES ($1, $2, $3) RETURNING *', 
-        [email, password, username], 
-        (error, results) => {
-        if (error) {
-          return res.status(500).json({ message: "Error registering user" });
-        }
-        return res.status(201).json(results.rows[0]);
-      });
+        'INSERT INTO users (id, email, password, username) VALUES ($1, $2, $3, $4)',
+        [authUserID, email, password, username]
+      );
 
       return res.status(201).json({
         message: "Signup Sucessful"
