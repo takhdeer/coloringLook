@@ -6,6 +6,7 @@ import JoinGroup from './components/joinGroup';
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Play from "./pages/Play";
+import ViewGroups from './components/ViewGroups';
 
 export default function App() {
     return (
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/join" element={<JoinGroup />} />
           <Route path="/play" element={<Play />} /> {/* TEST: fake leaderboard players */}
           <Route path="/play/:groupId" element={<Play />} />
+          <Route path='/comp/view/groups' element={< ViewGroups />} />
         </Routes>
       </BrowserRouter>
     )

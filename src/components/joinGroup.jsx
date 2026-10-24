@@ -9,7 +9,7 @@ export default function JoinGroup() {
     const [groupId, setGroupId] = useState('')
     const [errorMessage, setErrorMessage] = useState('')
 
-    const handleBack = () => navigate('/dashboard')
+    const handleBack = () => navigate('/play')
 
     const handleSubmit = async (e) => {
         e.preventDefault()

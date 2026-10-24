@@ -10,7 +10,7 @@ export default function CreateGroup() {
     const [friends, setFriends] = useState([])
     const [errorMessage, setErrorMessage] = useState('')
 
-    const handleBack = () => navigate('/dashboard')
+    const handleBack = () => navigate('/play')
 
     const handleAddFriend = () => {
         const name = friend.trim()
