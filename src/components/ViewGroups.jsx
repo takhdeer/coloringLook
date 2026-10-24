@@ -71,7 +71,19 @@ export default function ViewGroups() {
             ) : (
                 <ol className="play-members-list">
                     {groups.map((group) => (
-                        <li key={group.id} className="play-members-row">
+                        <li
+                            key={group.id}
+                            className="play-members-row group-row"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => navigate(`/play/${group.id}`)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault()
+                                    navigate(`/play/${group.id}`)
+                                }
+                            }}
+                        >
                             <div className="play-members-header">
                                 <span className="play-members-name">{group.name}</span>
                                 <span className='play-members-score'>{group.progress}</span>
