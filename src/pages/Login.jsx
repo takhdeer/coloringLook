@@ -1,4 +1,5 @@
 import "./Login.css";
+import loginTitle from "../assets/login.svg";
 
 function Login() {
   return (
@@ -6,7 +7,9 @@ function Login() {
 
       <div className="login-card">
 
-      <h1 className="login-header">login</h1>
+      <h1 className="login-header">
+        <img src={loginTitle} alt="login" />
+      </h1>
 
         <div className="email-form">
           <label htmlFor="email" className="form-label">email</label>
@@ -19,9 +22,7 @@ function Login() {
         </div>
 
         <div className="submit">
-          <button type="button" className="btn btn-primary">Log in</button>
-
-
+          <button type="button" className="login-btn">log in</button>
         </div>
 
       </div>

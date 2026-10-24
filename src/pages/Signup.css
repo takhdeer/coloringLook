@@ -1,25 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
 
 .signup-page {
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  padding: 16px;
+  font-family: 'Comic Sans MS', 'Comic Neue', cursive;
+  color: #111;
+  /* Paper colour shows while the texture tile loads */
+  background: #e8e3d8 url('../assets/paper-texture.svg') repeat;
 }
 
 .signup-card {
   width: 100%;
   max-width: 400px;
-  padding: 2rem;
-  border-radius: 12px;
-  background-color: white;
-  border: none;
+  text-align: left;
 }
 
 .signup-header {
-  color: black;
-  text-align: center;
-  margin-bottom: 2rem;
+  margin: 0 auto 2rem;
+  max-width: 360px;
+}
+
+.signup-header img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.signup-card .form-label {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.signup-card .form-control {
+  font-family: inherit;
+  font-size: 16px;
+  color: #111;
+  background: rgba(255, 255, 255, 0.5);
+  border: 2px solid #111;
+  border-radius: 12px;
+}
+
+.signup-card .form-control:focus {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: #111;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.15);
 }
 
 .email-form,
@@ -30,4 +57,27 @@
 .submit {
   display: flex;
   justify-content: center;
+  padding-top: 0.5rem;
+}
+
+.signup-btn {
+  width: 180px;
+  padding: 10px 20px;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+  background: transparent;
+  border: 2px solid #111;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.signup-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.signup-btn:active {
+  transform: scale(0.98);
 }

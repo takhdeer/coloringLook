@@ -1,4 +1,5 @@
 import "./Signup.css";
+import signUpTitle from "../assets/sign-up.svg";
 
 function Signup() {
   return (
@@ -6,7 +7,9 @@ function Signup() {
 
       <div className="signup-card">
 
-      <h1 className="signup-header">SIGN UP!!!</h1>
+      <h1 className="signup-header">
+        <img src={signUpTitle} alt="sign up!!" />
+      </h1>
 
         <div className="email-form">
           <label htmlFor="email" className="form-label">email</label>
@@ -19,14 +22,12 @@ function Signup() {
         </div>
 
         <div className="password-form">
-          <label htmlFor="confirmPassword" className="form-label">confirm password</label>
+          <label htmlFor="confirmPassword" className="form-label">super secret password again</label>
           <input type="password" className="form-control" id="confirmPassword"/>
         </div>
 
         <div className="submit">
-          <button type="button" className="btn btn-primary">sign up</button>
-
-
+          <button type="button" className="signup-btn">sign up</button>
         </div>
 
       </div>

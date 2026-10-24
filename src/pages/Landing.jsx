@@ -5,9 +5,8 @@ import logo from '../assets/coloringlook-logo.svg'
 export default function Landing() {
     const navigate = useNavigate()
 
-    // No real auth yet: both go straight to the dashboard
-    const handleLogin = () => navigate('/dashboard')
-    const handleSignUp = () => navigate('/dashboard')
+    const handleLogin = () => navigate('/login')
+    const handleSignUp = () => navigate('/signup')
 
     return (
         <div className="landing">

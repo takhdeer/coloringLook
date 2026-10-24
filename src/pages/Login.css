@@ -1,21 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+
 .login-page {
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 16px;
+  font-family: 'Comic Sans MS', 'Comic Neue', cursive;
+  color: #111;
+  /* Paper colour shows while the texture tile loads */
+  background: #e8e3d8 url('../assets/paper-texture.svg') repeat;
 }
 
 .login-card {
   width: 100%;
   max-width: 400px;
-  padding: 2rem;
-  border-radius: 12px;
+  text-align: left;
 }
 
 .login-header {
-    color:black;
+  margin: 0 auto 2rem;
+  max-width: 320px;
+}
+
+.login-header img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.login-card .form-label {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.login-card .form-control {
+  font-family: inherit;
+  font-size: 16px;
+  color: #111;
+  background: rgba(255, 255, 255, 0.5);
+  border: 2px solid #111;
+  border-radius: 12px;
+}
+
+.login-card .form-control:focus {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: #111;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.15);
 }
 
 .email-form, .password-form {
-    padding-bottom: 2rem;
+  padding-bottom: 1.5rem;
+}
+
+.submit {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.5rem;
+}
+
+.login-btn {
+  width: 180px;
+  padding: 10px 20px;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+  background: transparent;
+  border: 2px solid #111;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.login-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.login-btn:active {
+  transform: scale(0.98);
 }
