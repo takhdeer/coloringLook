@@ -2,5 +2,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 4rem;
+    gap: 3rem;
+    margin-bottom: 1rem;
+}
+
+.play-members-title {
+    padding-left: 0.5rem;
 }
