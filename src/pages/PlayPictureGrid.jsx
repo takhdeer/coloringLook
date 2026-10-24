@@ -28,6 +28,9 @@ export default function PlayPictureGrid({ groupId }) {
         return () => { cancelled = true }
     }, [groupId])
 
+    if (!groupId) {
+        return <p className="play-grid-message">pick a group on the left to see its picture</p>
+    }
     if (error) {
         return <p className="play-grid-message">couldn't load the picture: {error}</p>
     }
