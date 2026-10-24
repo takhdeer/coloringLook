@@ -2,6 +2,7 @@ import { useParams } from 'react-router'
 import './Play.css'
 import logo from '../assets/coloringlook-logo.svg'
 import PlayMembersColumn from './PlayMembersColumn'
+import PlayPicture from './PlayPicture'
 
 export default function Play() {
     const { groupId } = useParams()
@@ -17,8 +18,7 @@ export default function Play() {
                 <section className="play-col play-side" />
 
                 <section className="play-col play-main">
-                    {/* TODO: the picture the player colors in */}
-                    <div className="play-canvas">picture goes here</div>
+                    <PlayPicture />
                 </section>
 
                 <PlayMembersColumn groupId={groupId} />
