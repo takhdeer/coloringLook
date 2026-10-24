@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <filter id="paper" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <!-- crinkly cold-press grain -->
+    <feTurbulence type="fractalNoise" baseFrequency="0.085" numOctaves="4" seed="11" stitchTiles="stitch" result="grain"/>
+    <feDiffuseLighting in="grain" lighting-color="#ffffff" surfaceScale="4.2" diffuseConstant="1" result="lit">
+      <feDistantLight azimuth="235" elevation="62"/>
+    </feDiffuseLighting>
+    <!-- squeeze the shading into a soft range so it stays subtle -->
+    <feComponentTransfer in="lit" result="soft">
+      <feFuncR type="linear" slope="0.20" intercept="0.83"/>
+      <feFuncG type="linear" slope="0.20" intercept="0.83"/>
+      <feFuncB type="linear" slope="0.20" intercept="0.83"/>
+    </feComponentTransfer>
+    <feFlood flood-color="#E7E2D9" result="base"/>
+    <feBlend in="soft" in2="base" mode="multiply"/>
+  </filter>
+  <rect width="320" height="320" filter="url(#paper)"/>
+</svg>
