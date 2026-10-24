@@ -79,4 +79,19 @@ function rgbToHex(rgb) {
     return '#' + rgb.map((v) => v.toString(16).padStart(2, '0')).join('');
 }
 
-module.exports = { pixelate };
+// Finds the palette colour closest to `color` ('#rrggbb' or [r, g, b]).
+// Returns { paletteIndex, color: '#rrggbb', distance } where distance is the straight-line RGB
+// distance (0 = exact match, up to ~441 for black vs white), or null if the palette is empty.
+function matchPaletteColor(color, palette) {
+    if (!palette || palette.length === 0) return null;
+    const rgb = typeof color === 'string' ? hexToRgb(color) : color;
+    if (!Array.isArray(rgb) || rgb.length !== 3 || rgb.some((v) => !Number.isFinite(v))) {
+        throw new Error('color must be "#rrggbb" or [r, g, b]');
+    }
+    const paletteRgb = palette.map(hexToRgb);
+    const paletteIndex = nearest(rgb, paletteRgb);
+    const distance = Math.hypot(...rgb.map((v, i) => v - paletteRgb[paletteIndex][i]));
+    return { paletteIndex, color: palette[paletteIndex], distance: Math.round(distance) };
+}
+
+module.exports = { pixelate, matchPaletteColor };

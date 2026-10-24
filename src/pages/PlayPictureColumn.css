@@ -1,0 +1,29 @@
+.play-picture {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.play-picture-message {
+    margin: auto;
+    color: rgba(0, 0, 0, 0.5);
+    font-size: 20px;
+    text-align: center;
+}
+
+/* One div per cell; thin gaps show the grid lines */
+.play-picture-grid {
+    display: grid;
+    gap: 1px;
+    width: 100%;
+    padding: 1px;
+    background: rgba(0, 0, 0, 0.15);
+    border: 2px solid #111;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Transparent parts of the picture: faint hatching, so light picture colours still stand out */
+.play-picture-cell-empty {
+    background: repeating-linear-gradient(45deg, #f4f1ea 0 2px, #e3ddd0 2px 4px);
+}
