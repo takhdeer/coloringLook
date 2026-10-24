@@ -1,10 +1,4 @@
-.play-picture {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.play-picture-message {
+.play-grid-message {
     margin: auto;
     color: rgba(0, 0, 0, 0.5);
     font-size: 20px;
@@ -12,7 +6,7 @@
 }
 
 /* One div per cell; thin gaps show the grid lines */
-.play-picture-grid {
+.play-grid {
     display: grid;
     gap: 1px;
     width: 100%;
@@ -24,6 +18,6 @@
 }
 
 /* Transparent parts of the picture: faint hatching, so light picture colours still stand out */
-.play-picture-cell-empty {
+.play-grid-cell-empty {
     background: repeating-linear-gradient(45deg, #f4f1ea 0 2px, #e3ddd0 2px 4px);
 }

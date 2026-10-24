@@ -2,7 +2,8 @@ import { useParams } from 'react-router'
 import './Play.css'
 import logo from '../assets/coloringlook-logo.svg'
 import PlayMembersColumn from './PlayMembersColumn'
-import PlayPictureColumn from './PlayPictureColumn'
+import PlayPicture from './PlayPicture'
+import PlayPictureGrid from './PlayPictureGrid'
 
 export default function Play() {
     const { groupId } = useParams()
@@ -17,7 +18,11 @@ export default function Play() {
                 {/* TODO: left column content */}
                 <section className="play-col play-side" />
 
-                <PlayPictureColumn groupId={groupId} />
+                <section className="play-col play-main">
+                    <PlayPicture>
+                        <PlayPictureGrid groupId={groupId} />
+                    </PlayPicture>
+                </section>
 
                 <PlayMembersColumn groupId={groupId} />
             </main>
