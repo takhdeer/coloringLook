@@ -53,6 +53,12 @@
   padding-bottom: 1.5rem;
 }
 
+.login-error {
+  margin: 0 0 1rem;
+  font-weight: 700;
+  color: #8b1e1e;
+}
+
 .submit {
   display: flex;
   justify-content: center;
