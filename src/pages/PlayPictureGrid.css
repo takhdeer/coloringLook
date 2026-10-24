@@ -17,7 +17,8 @@
     overflow: hidden;
 }
 
-/* Transparent parts of the picture: faint hatching, so light picture colours still stand out */
+/* Transparent parts of the picture: tan hatching, darker than off-white so light picture
+   colours still stand out against it */
 .play-grid-cell-empty {
-    background: repeating-linear-gradient(45deg, #f4f1ea 0 2px, #e3ddd0 2px 4px);
+    background: repeating-linear-gradient(45deg, #cfc7b4 0 2px, #c2b9a4 2px 4px);
 }

@@ -8,6 +8,9 @@ const BUCKET = 'images';
 // Every group's picture is pixelated with these settings, so all players see the same cells
 const GRID_COLS = 96;
 const GRID_COLORS = 8;
+// Picked colours that look closer than this (CIELAB ΔE) are merged, so every palette colour is
+// clearly different and uploaded photos match one unambiguously. Usually leaves 4-6 colours.
+const GRID_MIN_COLOR_DISTANCE = 25;
 
 // An error with the HTTP status a route should answer with
 class GameError extends Error {
@@ -54,7 +57,7 @@ async function getGroupGrid(groupId) {
         const file = await loadImageFile(imageId);
         let grid;
         try {
-            grid = await pixelate(file, { cols: GRID_COLS, colors: GRID_COLORS });
+            grid = await pixelate(file, { cols: GRID_COLS, colors: GRID_COLORS, minDistance: GRID_MIN_COLOR_DISTANCE });
         } catch (err) {
             console.log(err);
             throw new GameError(422, "Stored file could not be read as an image");
