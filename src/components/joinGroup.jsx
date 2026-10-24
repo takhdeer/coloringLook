@@ -2,6 +2,7 @@ import '../pages/Dashboard.css'
 import './joinGroup.css'
 import { useNavigate } from 'react-router'
 import { useState } from 'react'
+import { supabase } from '../lib/supabase.mjs'
 
 export default function JoinGroup() {
     const navigate = useNavigate()
@@ -10,14 +11,39 @@ export default function JoinGroup() {
 
     const handleBack = () => navigate('/dashboard')
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
         if (!groupId.trim()) {
             setErrorMessage('Enter a group id')
             return
         }
         setErrorMessage('')
-        // TODO: send to the join group endpoint once the backend is hooked up
+
+        const { data: authData, error } = await supabase.auth.getUser()
+        if (error) {
+            console.log('Could not get user', error.message)
+            setErrorMessage('Could not get user')
+            return
+        }
+        if (!authData.user) {
+            console.log('No Signed-in user')
+            navigate('/login')
+            return
+        }
+        const userId = authData.user.id
+
+        // TODO: friends are usernames, but the backend expects user ids
+        const res = await fetch('http://localhost:3001/api/joinGroup', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ groupId, member: userId})
+        });
+
+        if (!res.ok) {
+            setErrorMessage('Server Error')
+            return
+        }
+        
         console.log('Join room', { groupId: groupId.trim() })
     }
 
