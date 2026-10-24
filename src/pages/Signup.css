@@ -81,3 +81,19 @@
 .signup-btn:active {
   transform: scale(0.98);
 }
+
+.signup-error,
+.signup-notice {
+  text-align: center;
+  font-weight: 700;
+  margin: 0 0 1rem;
+}
+
+.signup-error {
+  color: #b00020;
+}
+
+.signup-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
