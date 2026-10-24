@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+
+.landing {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    gap: 40px;
+    font-family: 'Comic Sans MS', 'Comic Neue', cursive;
+    color: #111;
+    /* Paper colour shows while the texture tile loads */
+    background: #e8e3d8 url('../assets/paper-texture.svg') repeat;
+}
+
+.landing-logo {
+    margin: 0;
+    width: 100%;
+    max-width: 800px;
+}
+
+.landing-logo img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.landing-tagline {
+    margin: 0;
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 700;
+    text-shadow: 2px 3px 4px rgba(0, 0, 0, 0.25);
+}
+
+.landing-auth {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+}
+
+.landing-auth-btn {
+    width: 180px;
+    padding: 10px 20px;
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 700;
+    color: #111;
+    background: transparent;
+    border: 2px solid #111;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.landing-auth-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.landing-auth-btn:active {
+    transform: scale(0.98);
+}
