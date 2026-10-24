@@ -19,7 +19,6 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/groups" element={<CreateGroup />} />
           <Route path="/join" element={<JoinGroup />} />
-          <Route path="/play" element={<Play />} /> {/* TEST: fake leaderboard players */}
           <Route path="/play/:groupId" element={<Play />} />
           <Route path='/comp/view/groups' element={< ViewGroups />} />
         </Routes>
