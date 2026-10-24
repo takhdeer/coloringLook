@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+
+.play {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    gap: 24px;
+    font-family: 'Comic Sans MS', 'Comic Neue', cursive;
+    color: #111;
+    /* Paper colour shows while the texture tile loads */
+    background: #e8e3d8 url('../assets/paper-texture.svg') repeat;
+}
+
+.play-logo {
+    margin: 0;
+    width: 100%;
+    max-width: 480px;
+}
+
+.play-logo img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* Side columns are narrower than the middle one */
+.play-columns {
+    width: 100%;
+    max-width: 1400px;
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 24px;
+}
+
+.play-col {
+    min-width: 0;
+    padding: 16px;
+    border: 2px solid #111;
+    border-radius: 16px;
+}
+
+.play-main {
+    display: flex;
+}
+
+.play-canvas {
+    flex: 1;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: rgba(0, 0, 0, 0.4);
+    border: 2px dashed rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+}
+
+/* Stack the columns on narrow screens */
+@media (max-width: 800px) {
+    .play-columns {
+        grid-template-columns: 1fr;
+    }
+}

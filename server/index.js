@@ -14,6 +14,7 @@ const registerRoute = require('./routes/register');
 const loginRoute = require('./routes/login')
 const createGroup = require('./routes/groups/createGroup')
 const deleteGroup = require('./routes/groups/deleteGroup')
+const leaderboard = require('./routes/groups/leaderboard')
 
 
 // Endpoints
@@ -21,6 +22,7 @@ app.use('/api/register', registerRoute);
 app.use('/api/login', loginRoute);
 app.use('/api/createGroup', createGroup);
 app.use('/api/deleteGroup', deleteGroup);
+app.use('/api/leaderboard', leaderboard);
 
 // Test endpoints 
 app.get("/db-test", async (_req, res) => {
