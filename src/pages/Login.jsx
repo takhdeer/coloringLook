@@ -1,9 +1,19 @@
 import "./Login.css";
 import loginTitle from "../assets/login.svg";
+import { useNavigate } from 'react-router';
 
 function Login() {
+  const navigate = useNavigate();
+  const handleLanding = () => navigate('/landing');
   return (
+
+    <div>
+
+
     <div className="login-page">
+      <button className="back-btn" onClick={handleLanding}>
+        {"<"}
+      </button>
 
       <div className="login-card">
 
@@ -26,6 +36,7 @@ function Login() {
         </div>
 
       </div>
+    </div>
     </div>
   );
 }
