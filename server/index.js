@@ -7,7 +7,7 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));     // room for SVGs sent to /api/pixelate
 
 // Routes
 const registerRoute = require('./routes/register');
@@ -16,6 +16,7 @@ const createGroup = require('./routes/groups/createGroup')
 const deleteGroup = require('./routes/groups/deleteGroup')
 const leaderboard = require('./routes/groups/leaderboard')
 const joinGroup = require('./routes/groups/joinGroup')
+const pixelate = require('./routes/pixelate')
 
 
 // Endpoints
@@ -25,6 +26,7 @@ app.use('/api/createGroup', createGroup);
 app.use('/api/deleteGroup', deleteGroup);
 app.use('/api/leaderboard', leaderboard);
 app.use('/api/joinGroup', joinGroup);
+app.use('/api/pixelate', pixelate);
 
 // Test endpoints 
 app.get("/db-test", async (_req, res) => {
