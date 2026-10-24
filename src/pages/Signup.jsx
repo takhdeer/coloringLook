@@ -11,6 +11,11 @@ function Signup() {
         <img src={signUpTitle} alt="sign up!!" />
       </h1>
 
+        <div className="username-form">
+          <label htmlFor="username" className="form-label">username</label>
+          <input type="username" className="form-control" id="username" placeholder="e.g. TheLegend27"/>
+        </div>
+
         <div className="email-form">
           <label htmlFor="email" className="form-label">email</label>
           <input type="email" className="form-control" id="email" placeholder="name@example.com"/>
