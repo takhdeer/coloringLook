@@ -1,6 +1,7 @@
 import './createGroup.css'
 import { useNavigate } from 'react-router'
 import { useState } from 'react'
+import { supabase } from '../lib/supabase.mjs'
 
 export default function CreateGroup() {
     const navigate = useNavigate()
@@ -35,7 +36,7 @@ export default function CreateGroup() {
         setFriends(friends.filter((f) => f !== name))
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
         if (!roomName.trim()) {
             setErrorMessage('Give your room a name')
@@ -46,8 +47,35 @@ export default function CreateGroup() {
             return
         }
         setErrorMessage('')
-        // TODO: send to /api/createGroup once the backend is hooked up
-        console.log('Create room', { groupName: roomName.trim(), groupMembers: friends })
+
+        // getUser is async and returns { data, error }
+        const { data: authData, error } = await supabase.auth.getUser()
+        if (error) {
+            console.log('Could not get user', error.message)
+            setErrorMessage('Could not get user')
+            return
+        }
+        if (!authData.user) {
+            console.log('No Signed-in user')
+            navigate('/login')
+            return
+        }
+        const userId = authData.user.id
+
+        // TODO: friends are usernames, but the backend expects user ids
+        const res = await fetch('http://localhost:3001/api/createGroup', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ groupName: roomName.trim(), groupMembers: [userId] })
+        });
+
+        if (!res.ok) {
+            setErrorMessage('Server Error')
+            return
+        }
+        
+        console.log('Created room', { groupName: roomName.trim(), groupMembers: friends })
+        navigate('/dashboard')
     }
 
     return (
@@ -115,7 +143,9 @@ export default function CreateGroup() {
                 {errorMessage ? <p className="create-group-error">{errorMessage}</p> : null}
 
                 <div className="create-group-submit">
-                    <button type="submit" className="dashboard-btn">
+                    <button 
+                        type="submit" 
+                        className="dashboard-btn">
                         create room
                     </button>
                 </div>
