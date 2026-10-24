@@ -1,0 +1,21 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+  border-radius: 12px;
+}
+
+.login-header {
+    color:black;
+}
+
+.email-form, .password-form {
+    padding-bottom: 2rem;
+}
