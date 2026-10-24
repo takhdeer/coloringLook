@@ -2,14 +2,14 @@
   "name": "coloringlook",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "dev": "concurrently \"bun run client\" \"bun run server\"",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "client": "vite",
-    "server": "bun run server/index.js"
+    "server": "nodemon server/index.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
@@ -30,6 +30,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.7",
     "globals": "^17.13.0",
+    "nodemon": "^3.1.14",
     "vite": "^8.3.4"
   }
 }
