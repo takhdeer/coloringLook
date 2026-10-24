@@ -1,7 +1,12 @@
 import "./Signup.css";
 import signUpTitle from "../assets/sign-up.svg";
+import { useNavigate} from 'react-router'
 
 function Signup() {
+  const navigate = useNavigate()
+
+  const handleLogin = () => navigate('/dashboard')
+  
   return (
     <div className="signup-page">
 
@@ -32,7 +37,7 @@ function Signup() {
         </div>
 
         <div className="submit">
-          <button type="button" className="signup-btn">sign up</button>
+          <button type="button" className="signup-btn" onClick={handleLogin}>sign up</button>
         </div>
 
       </div>
