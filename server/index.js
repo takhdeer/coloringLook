@@ -12,11 +12,13 @@ app.use(express.json());
 // Routes
 const registerRoute = require('./routes/register');
 const loginRoute = require('./routes/login')
+const createGroup = require('./routes/groups/createGroup')
 
 
 // Endpoints
 app.use('/api/register', registerRoute);
-app.use('/api/login', loginRoute)
+app.use('/api/login', loginRoute);
+app.use('/api/createGroup', createGroup);
 
 // Test endpoints 
 app.get("/db-test", async (_req, res) => {
