@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import './PlayPicture.css'
 import uploadIcon from '../assets/upload-or-camera.svg'
 
-export default function PlayPicture() {
+// children is what fills the picture area (e.g. the group's grid); shows a placeholder without it
+export default function PlayPicture({ children }) {
     const fileInputRef = useRef(null)
 
     // The file the player just chose, waiting for user to confirm or cancel
@@ -74,7 +75,7 @@ export default function PlayPicture() {
 
     return (
         <div className="play-picture">
-            <span className="play-picture-placeholder">picture goes here</span>
+            {children ?? <span className="play-picture-placeholder">picture goes here</span>}
 
             <input
                 ref={fileInputRef}

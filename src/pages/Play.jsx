@@ -4,6 +4,7 @@ import logo from '../assets/coloringlook-logo.svg'
 import PlayMembersColumn from './PlayMembersColumn'
 import ViewGroups from '../components/ViewGroups'
 import PlayPicture from './PlayPicture'
+import PlayPictureGrid from './PlayPictureGrid'
 
 export default function Play() {
     const { groupId } = useParams()
@@ -21,7 +22,9 @@ export default function Play() {
                 </section>
 
                 <section className="play-col play-main">
-                    <PlayPicture />
+                    <PlayPicture>
+                        <PlayPictureGrid groupId={groupId} />
+                    </PlayPicture>
                 </section>
 
                 <PlayMembersColumn groupId={groupId} />

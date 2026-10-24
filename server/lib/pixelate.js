@@ -3,7 +3,9 @@ const sharp = require('sharp');
 // Turns an image (SVG, PNG, JPG...) into a grid of palette indexes for colouring.
 // Returns { cols, rows, palette: ['#rrggbb', ...], grid: [[index | null, ...], ...] }
 // where grid[y][x] is the palette colour of that cell, or null if the cell is transparent.
-async function pixelate(input, { cols = 32, colors = 8, palette } = {}) {
+// minDistance (CIELAB ΔE, 0 = off) merges picked colours that look closer than that, so the
+// palette ends up with clearly different colours (fewer than `colors` if some were similar).
+async function pixelate(input, { cols = 32, colors = 8, palette, minDistance = 0 } = {}) {
     // density only matters for SVGs: rasterise them sharp enough before shrinking
     const image = sharp(input, { density: 300 });
     const { width, height } = await image.metadata();
@@ -22,16 +24,22 @@ async function pixelate(input, { cols = 32, colors = 8, palette } = {}) {
         cells.push(data[i + 3] < 128 ? null : [data[i], data[i + 1], data[i + 2]]);
     }
 
-    const centers = palette
+    let centers = palette
         ? palette.map(hexToRgb)
         : kMeans(cells.filter(Boolean), colors);
+    if (!palette && minDistance > 0) {
+        centers = mergeSimilar(cells.filter(Boolean), centers, minDistance);
+    }
 
+    // With merging on, cells go to the colour they look closest to (so shaded beige doesn't
+    // land on yellow); otherwise plain RGB distance as before
+    const pick = minDistance > 0 ? nearestLab : nearest;
     const grid = [];
     for (let y = 0; y < rows; y++) {
         const row = [];
         for (let x = 0; x < cols; x++) {
             const cell = cells[y * cols + x];
-            row.push(cell ? nearest(cell, centers) : null);
+            row.push(cell ? pick(cell, centers) : null);
         }
         grid.push(row);
     }
@@ -61,6 +69,62 @@ function kMeans(pixels, k) {
     return [...new Map(centers.map((c) => [rgbToHex(c), c])).values()];
 }
 
+// Repeatedly merges the two colours that look most alike (CIELAB ΔE) until every pair is at
+// least minDistance apart. A merged colour is the average of both, weighted by how many pixels
+// each covered, so big areas keep their colour.
+function mergeSimilar(pixels, centers, minDistance) {
+    const counts = centers.map(() => 0);
+    for (const px of pixels) counts[nearest(px, centers)]++;
+    let groups = centers.map((rgb, i) => ({ rgb, count: counts[i] })).filter((g) => g.count > 0);
+
+    while (groups.length > 1) {
+        let best = null;
+        for (let i = 0; i < groups.length; i++) {
+            for (let j = i + 1; j < groups.length; j++) {
+                const d = deltaE(groups[i].rgb, groups[j].rgb);
+                if (!best || d < best.d) best = { i, j, d };
+            }
+        }
+        if (best.d >= minDistance) break;
+
+        const a = groups[best.i], b = groups[best.j];
+        const count = a.count + b.count;
+        const rgb = a.rgb.map((v, k) => Math.round((v * a.count + b.rgb[k] * b.count) / count));
+        groups = groups.filter((_, k) => k !== best.i && k !== best.j).concat({ rgb, count });
+    }
+
+    // Biggest areas first, so palette order is stable and meaningful
+    return groups.sort((a, b) => b.count - a.count).map((g) => g.rgb);
+}
+
+// Like nearest(), but by how different the colours look (ΔE) rather than raw RGB
+function nearestLab(px, centers) {
+    let best = 0, bestDist = Infinity;
+    for (let c = 0; c < centers.length; c++) {
+        const d = deltaE(px, centers[c]);
+        if (d < bestDist) { bestDist = d; best = c; }
+    }
+    return best;
+}
+
+// How different two colours look to the eye (CIE76 ΔE: ~2 is barely visible, 50+ is very different)
+function deltaE(a, b) {
+    const la = rgbToLab(a), lb = rgbToLab(b);
+    return Math.hypot(la[0] - lb[0], la[1] - lb[1], la[2] - lb[2]);
+}
+
+function rgbToLab(rgb) {
+    const [r, g, b] = rgb.map((v) => {
+        v /= 255;
+        return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    });
+    const f = (t) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116);
+    const x = f((0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047);
+    const y = f(0.2126 * r + 0.7152 * g + 0.0722 * b);
+    const z = f((0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883);
+    return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+}
+
 function nearest(px, centers) {
     let best = 0, bestDist = Infinity;
     for (let c = 0; c < centers.length; c++) {
@@ -79,4 +143,20 @@ function rgbToHex(rgb) {
     return '#' + rgb.map((v) => v.toString(16).padStart(2, '0')).join('');
 }
 
-module.exports = { pixelate };
+// Finds the palette colour that looks closest to `color` ('#rrggbb' or [r, g, b]), the same way
+// picture cells are matched. Returns { paletteIndex, color: '#rrggbb', distance } where distance
+// is ΔE (0 = exact, under ~10 is a close match, 50+ is a very different colour), or null if the
+// palette is empty.
+function matchPaletteColor(color, palette) {
+    if (!palette || palette.length === 0) return null;
+    const rgb = typeof color === 'string' ? hexToRgb(color) : color;
+    if (!Array.isArray(rgb) || rgb.length !== 3 || rgb.some((v) => !Number.isFinite(v))) {
+        throw new Error('color must be "#rrggbb" or [r, g, b]');
+    }
+    const paletteRgb = palette.map(hexToRgb);
+    const paletteIndex = nearestLab(rgb, paletteRgb);
+    const distance = deltaE(rgb, paletteRgb[paletteIndex]);
+    return { paletteIndex, color: palette[paletteIndex], distance: Math.round(distance) };
+}
+
+module.exports = { pixelate, matchPaletteColor };

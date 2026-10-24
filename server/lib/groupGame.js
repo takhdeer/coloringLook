@@ -1,0 +1,141 @@
+const pool = require('../db');
+const { supabase } = require('./supabase');
+const { pixelate, matchPaletteColor } = require('./pixelate');
+
+// Supabase Storage bucket holding the image files; public.images.path is a file name in here
+const BUCKET = 'images';
+
+// Every group's picture is pixelated with these settings, so all players see the same cells
+const GRID_COLS = 96;
+const GRID_COLORS = 8;
+// Picked colours that look closer than this (CIELAB ΔE) are merged, so every palette colour is
+// clearly different and uploaded photos match one unambiguously. Usually leaves 4-6 colours.
+const GRID_MIN_COLOR_DISTANCE = 25;
+
+// An error with the HTTP status a route should answer with
+class GameError extends Error {
+    constructor(status, message, extra = {}) {
+        super(message);
+        this.status = status;
+        this.extra = extra;
+    }
+}
+
+// Downloads an image file from the bucket by its public.images id
+async function loadImageFile(imageId) {
+    const result = await pool.query('select path from public.images where id = $1', [imageId]);
+    if (result.rowCount === 0) throw new GameError(404, "Image not found");
+    const { path } = result.rows[0];
+
+    const { data: file, error } = await supabase.storage.from(BUCKET).download(path);
+    if (error) {
+        console.log(error);
+        throw new GameError(502, "Could not download the image file", { path });
+    }
+    return Buffer.from(await file.arrayBuffer());
+}
+
+// The picture attached to a group in public.group_image (the newest one if there are several)
+async function getGroupImageId(groupId) {
+    const result = await pool.query(
+        'select image_id from public.group_image where group_id = $1 order by created_at desc limit 1',
+        [groupId]
+    );
+    if (result.rowCount === 0) throw new GameError(404, "This group has no picture yet");
+    return Number(result.rows[0].image_id);
+}
+
+// Pixelating takes a moment, and every request for a group needs the same grid, so keep them
+const gridCache = new Map();
+
+// The group's picture as a grid, using the shared settings above.
+// The palette is also saved to public.images.palette so other code (e.g. the photo uploader)
+// can read it straight from the database.
+async function getGroupGrid(groupId) {
+    const imageId = await getGroupImageId(groupId);
+    if (!gridCache.has(imageId)) {
+        const file = await loadImageFile(imageId);
+        let grid;
+        try {
+            grid = await pixelate(file, { cols: GRID_COLS, colors: GRID_COLORS, minDistance: GRID_MIN_COLOR_DISTANCE });
+        } catch (err) {
+            console.log(err);
+            throw new GameError(422, "Stored file could not be read as an image");
+        }
+        // Only writes when the stored palette is missing or out of date (e.g. GRID_COLORS changed)
+        await pool.query(
+            'update public.images set palette = $2 where id = $1 and palette is distinct from $2',
+            [imageId, grid.palette]
+        );
+        gridCache.set(imageId, grid);
+    }
+    return { imageId, ...gridCache.get(imageId) };
+}
+
+// The group picture's palette colour closest to `color` ('#rrggbb' or [r, g, b]), and who owns it.
+// For the photo uploader: matches a photo's dominant colour to one of the picture's colours.
+// Returns { paletteIndex, color, distance, userId, username } (see matchPaletteColor for distance).
+async function matchGroupColor(groupId, color) {
+    const { palette } = await getGroupGrid(groupId);
+    const match = matchPaletteColor(color, palette);
+    if (!match) throw new GameError(422, "This group's picture has no colours");
+    const owners = await getColorOwners(groupId, palette);
+    const { userId, username } = owners[match.paletteIndex];
+    return { ...match, userId, username };
+}
+
+// The group's members in join order, with the palette colours they own (group_members.colors)
+async function getMembers(groupId) {
+    const result = await pool.query(
+        `select gm.user_id, u.username, coalesce(gm.colors, '{}') as colors
+         from public.group_members gm
+         left join public.users u on u.id = gm.user_id
+         where gm.group_id = $1
+         order by gm.joined_at, gm.user_id`,
+        [groupId]
+    );
+    return result.rows.map((r) => ({
+        userId: r.user_id,
+        username: r.username,
+        colors: r.colors.map((c) => c.toLowerCase()),
+    }));
+}
+
+// Who owns each palette colour, as [{ paletteIndex, userId, username }]. Colours nobody owns yet
+// are dealt out to the members with the fewest colours (join order breaks ties), so this is safe
+// to call every time. Once every colour is owned, players who join later get none.
+async function getColorOwners(groupId, palette) {
+    let members = await getMembers(groupId);
+    const ownerOf = (hex) => members.find((m) => m.colors.includes(hex));
+    const unowned = palette.filter((hex) => !ownerOf(hex));
+
+    if (unowned.length > 0 && members.length > 0) {
+        // Anything in colors that isn't in this picture's palette (e.g. old test data) is dropped
+        const owned = members.map((m) => m.colors.filter((c) => palette.includes(c)));
+        for (const hex of unowned) {
+            let pick = 0;
+            owned.forEach((list, i) => { if (list.length < owned[pick].length) pick = i; });
+            owned[pick].push(hex);
+        }
+        for (const [i, m] of members.entries()) {
+            await pool.query(
+                'update public.group_members set colors = $3 where group_id = $1 and user_id = $2',
+                [groupId, m.userId, owned[i]]
+            );
+        }
+        members = await getMembers(groupId);
+    }
+
+    return palette.map((hex, paletteIndex) => {
+        const owner = ownerOf(hex);
+        return { paletteIndex, userId: owner?.userId ?? null, username: owner?.username ?? null };
+    });
+}
+
+module.exports = {
+    GameError,
+    loadImageFile,
+    getGroupGrid,
+    getColorOwners,
+    matchGroupColor,
+};

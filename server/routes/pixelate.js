@@ -1,11 +1,16 @@
 const express = require("express");
-const pool = require("../db");
 const router = express.Router();
 const { pixelate } = require('../lib/pixelate');
-const { supabase } = require('../lib/supabase');
+const { GameError, loadImageFile, getGroupGrid, getColorOwners, matchGroupColor } = require('../lib/groupGame');
 
-// Supabase Storage bucket holding the image files; public.images.path is a file name in here
-const BUCKET = 'images';
+// Sends a GameError's status and message, or a 500 for anything unexpected
+function sendError(res, err) {
+    if (err instanceof GameError) {
+        return res.status(err.status).json({ message: err.message, ...err.extra });
+    }
+    console.log(err);
+    return res.status(500).json({ error: "Server Error", details: err.message });
+}
 
 // Returns an error message if the grid options are invalid, otherwise null
 function checkOptions(cols, colors, palette) {
@@ -20,6 +25,43 @@ function checkOptions(cols, colors, palette) {
     }
     return null;
 }
+
+// GET /api/pixelate/group/:groupId
+// Everything the Play page needs to draw a group's picture: the grid (fixed game settings),
+// and which player owns each palette colour
+router.get('/group/:groupId', async (req, res) => {
+    const groupId = req.params.groupId.toLowerCase();
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(groupId)) {
+        return res.status(400).json({ message: "Group id must be a uuid" });
+    }
+
+    try {
+        const grid = await getGroupGrid(groupId);
+        const owners = await getColorOwners(groupId, grid.palette);
+        return res.status(200).json({ groupId, ...grid, owners });
+    } catch (err) {
+        return sendError(res, err);
+    }
+});
+
+// GET /api/pixelate/group/:groupId/match?color=%23aabbcc
+// The group picture's colour closest to `color`, and which player owns it
+router.get('/group/:groupId/match', async (req, res) => {
+    const groupId = req.params.groupId.toLowerCase();
+    const color = String(req.query.color ?? '').toLowerCase();
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(groupId)) {
+        return res.status(400).json({ message: "Group id must be a uuid" });
+    }
+    if (!/^#[0-9a-f]{6}$/.test(color)) {
+        return res.status(400).json({ message: "color must be #rrggbb (write # as %23 in the URL)" });
+    }
+
+    try {
+        return res.status(200).json({ groupId, input: color, ...await matchGroupColor(groupId, color) });
+    } catch (err) {
+        return sendError(res, err);
+    }
+});
 
 // GET /api/pixelate/:imageId?cols=32&colors=8&palette=%23000000,%23ffffff
 // Pixelates an image from the storage bucket, looked up by its row in public.images
@@ -37,26 +79,14 @@ router.get('/:imageId', async (req, res) => {
         return res.status(400).json({ message: optionsError });
     }
 
-    let path;
+    let input;
     try {
-        const result = await pool.query('select path from public.images where id = $1', [imageId]);
-        if (result.rowCount === 0) {
-            return res.status(404).json({ message: "Image not found" });
-        }
-        path = result.rows[0].path;
+        input = await loadImageFile(imageId);
     } catch (err) {
-        console.log(err);
-        return res.status(500).json({ error: "Database Error", details: err });
-    }
-
-    const { data: file, error } = await supabase.storage.from(BUCKET).download(path);
-    if (error) {
-        console.log(error);
-        return res.status(502).json({ message: "Could not download the image file", path });
+        return sendError(res, err);
     }
 
     try {
-        const input = Buffer.from(await file.arrayBuffer());
         const grid = await pixelate(input, { cols, colors, palette });
         return res.status(200).json({ imageId: Number(imageId), ...grid });
     } catch (err) {
