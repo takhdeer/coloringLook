@@ -1,58 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+
 .landing {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 24px;
     padding: 16px;
+    gap: 40px;
+    font-family: 'Comic Sans MS', 'Comic Neue', cursive;
+    color: #111;
+    /* Placeholder paper colour until the background SVG is added */
+    background-color: #e8e3d8;
 }
 
-.auth-buttons {
-    position: absolute;
-    top: 16px;
-    right: 16px;
+.landing-logo {
+    margin: 0;
+    font-family: inherit;
+    font-size: clamp(40px, 8vw, 96px);
+    color: #111;
+}
+
+.landing-tagline {
+    margin: 0;
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 700;
+    text-shadow: 2px 3px 4px rgba(0, 0, 0, 0.25);
+}
+
+.landing-auth {
     display: flex;
-    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
 }
 
-.main-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-    max-width: 200px;
-}
-
-.btn {
-    padding: 12px 20px;
-    font-size: 16px;
-    border: 2px solid transparent;
-    border-radius: 8px;
+.landing-auth-btn {
+    width: 180px;
+    padding: 10px 20px;
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 700;
+    color: #111;
+    background: transparent;
+    border: 2px solid #111;
+    border-radius: 999px;
     cursor: pointer;
-    transition: transform 0.1s, background 0.2s;
+    transition: background 0.2s, transform 0.1s;
 }
 
-.btn:active {
+.landing-auth-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.landing-auth-btn:active {
     transform: scale(0.98);
-}
-
-.btn-primary {
-    background-color: #7c3aed;
-    color: white;
-    font-size: 20px;
-}
-
-.btn-primary:hover {
-    background-color: #6d28d9;
-}
-
-.btn-secondary {
-    background-color: transparent;
-    color: inherit;
-    border-color: currentColor;
-}
-
-.btn-secondary:hover {
-    background-color: rgba(124, 58, 237, 0.1);
 }

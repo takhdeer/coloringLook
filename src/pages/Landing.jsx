@@ -4,16 +4,24 @@ import './Landing.css'
 export default function Landing() {
     const navigate = useNavigate()
 
-    const handleSignUp = () => navigate('/dashboard')
+    // No real auth yet: both go straight to the dashboard
     const handleLogin = () => navigate('/dashboard')
+    const handleSignUp = () => navigate('/dashboard')
 
     return (
         <div className="landing">
-            <h1>ColouringLook</h1>
+            {/* TODO: replace with the ColoringLook logo SVG */}
+            <h1 className="landing-logo">ColoringLook</h1>
 
-            <div className="auth-buttons">
-                <button onClick={handleSignUp}>Sign Up</button>
-                <button onClick={handleLogin}>Login</button>
+            <p className="landing-tagline">get out and color !!</p>
+
+            <div className="landing-auth">
+                <button className="landing-auth-btn" onClick={handleLogin}>
+                    log in
+                </button>
+                <button className="landing-auth-btn" onClick={handleSignUp}>
+                    sign up
+                </button>
             </div>
         </div>
     )

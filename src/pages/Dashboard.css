@@ -1,14 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+
 .dashboard {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 24px;
     padding: 16px;
+    gap: 40px;
+    font-family: 'Comic Sans MS', 'Comic Neue', cursive;
+    color: #111;
+    /* Placeholder paper colour until the background SVG is added */
+    background-color: #e8e3d8;
 }
 
-.main-buttons {
+.dashboard-title {
+    margin: 0;
+    font-family: inherit;
+    font-size: clamp(40px, 8vw, 96px);
+    color: #111;
+}
+
+.dashboard-actions {
     display: flex;
-    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+}
+
+.dashboard-btn {
+    width: 180px;
+    padding: 10px 20px;
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 700;
+    color: #111;
+    background: transparent;
+    border: 2px solid #111;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.dashboard-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.dashboard-btn:active {
+    transform: scale(0.98);
 }
