@@ -1,6 +1,6 @@
 const pool = require('../db');
 const { supabase } = require('./supabase');
-const { pixelate, matchPaletteColor } = require('./pixelate');
+const { pixelate, matchPaletteColor, matchPhotoColor } = require('./pixelate');
 
 // Supabase Storage bucket holding the image files; public.images.path is a file name in here
 const BUCKET = 'images';
@@ -132,8 +132,37 @@ async function getColorOwners(groupId, palette) {
     });
 }
 
+// The most prominent colour of an uploaded photo as '#rrggbb', found exactly like a group picture's
+// palette (same grid size, colour count and merging), then taking the colour that covers the most
+// area. The photo itself isn't kept anywhere.
+async function getPhotoColor(photo) {
+    let result;
+    try {
+        result = await pixelate(photo, { cols: GRID_COLS, colors: GRID_COLORS, minDistance: GRID_MIN_COLOR_DISTANCE });
+    } catch (err) {
+        console.log(err);
+        throw new GameError(422, "Could not read that photo");
+    }
+
+    // Palette is ranked biggest area first, so [0] is the most prominent colour
+    if (result.palette.length === 0) throw new GameError(422, "That photo has no visible colours");
+    return result.palette[0];
+}
+
+// Matches a photo's colour against the colours this player owns in the group's picture (only
+// those are accepted). Returns { match, colors } where match is matchPhotoColor's result (null if
+// it's too different from all of them) and colors is the player's own colours.
+async function matchPlayerColor(groupId, userId, photoColor) {
+    const { palette } = await getGroupGrid(groupId);
+    const owners = await getColorOwners(groupId, palette);
+    const colors = owners.filter((o) => o.userId === userId).map((o) => palette[o.paletteIndex]);
+    return { match: colors.length ? matchPhotoColor(photoColor, colors) : null, colors };
+}
+
 module.exports = {
     GameError,
+    getPhotoColor,
+    matchPlayerColor,
     loadImageFile,
     getGroupGrid,
     getColorOwners,

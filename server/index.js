@@ -18,6 +18,7 @@ const leaderboard = require('./routes/groups/leaderboard')
 const joinGroup = require('./routes/groups/joinGroup')
 const getUserGroup = require('./routes/groups/getUserGroup')
 const pixelate = require('./routes/pixelate')
+const photoColor = require('./routes/photoColor')
 
 
 // Endpoints
@@ -29,6 +30,7 @@ app.use('/api/leaderboard', leaderboard);
 app.use('/api/joinGroup', joinGroup);
 app.use('/api/getUserGroup', getUserGroup);
 app.use('/api/pixelate', pixelate);
+app.use('/api/photoColor', photoColor);
 
 // Test endpoints 
 app.get("/db-test", async (_req, res) => {
