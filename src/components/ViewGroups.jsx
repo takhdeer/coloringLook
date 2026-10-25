@@ -29,7 +29,8 @@ async function leaveGroup(groupId, userId) {
     }
 };
 
-export default function ViewGroups() {
+// Changing refreshKey loads the groups again (e.g. after a score changes a group's progress)
+export default function ViewGroups({ refreshKey }) {
     const navigate = useNavigate()
     const { groupId: openGroupId } = useParams()
     const [userId, setUserId] = useState(null)
@@ -64,7 +65,7 @@ export default function ViewGroups() {
         return () => {
             cancelled = true
         }
-    }, [navigate])
+    }, [navigate, refreshKey])
 
     // The trash can on a row: leaves that group without also opening it
     const handleLeave = async (event, group) => {

@@ -1,4 +1,5 @@
 const pool = require('../db');
+const { progressPercent } = require('./scoring');
 
 // Each score point fills 1% of that colour's cells, so a score of 40 fills 40% of them
 const MAX_FILL_PERCENT = 100;
@@ -48,9 +49,9 @@ function fillOrder(grid, paletteIndex, seed) {
 }
 
 // The total score of each palette colour in the group (public.user_colors.score), as { hex: score }.
-// Colours with no row count as 0.
-async function getColorScores(groupId, palette) {
-    const result = await pool.query(
+// Colours with no row count as 0. Pass a transaction's client as `db` to see its uncommitted scores.
+async function getColorScores(groupId, palette, db = pool) {
+    const result = await db.query(
         `select lower(color_id) as color, sum(score)::int as score
          from public.user_colors
          where group_id = $1 and lower(color_id) = any($2::text[])
@@ -78,9 +79,19 @@ function buildFill(imageId, grid, palette, scores) {
     return { filled, fill };
 }
 
+// The group's progress for public.groups.progress from buildFill's `fill`: the share of the
+// picture's cells that are filled in, so big colours count for more than small ones (whole percent,
+// see progressPercent)
+function progressFromFill(fill) {
+    const filledCells = fill.reduce((sum, f) => sum + f.filledCells, 0);
+    const totalCells = fill.reduce((sum, f) => sum + f.totalCells, 0);
+    return progressPercent(totalCells ? filledCells * 100 / totalCells : 0);
+}
+
 module.exports = {
     fillPercent,
     fillOrder,
     getColorScores,
     buildFill,
+    progressFromFill,
 };

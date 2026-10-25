@@ -21,5 +21,18 @@ function scoreImage(distanceKm) {
     return { distanceKm: distanceKm ?? null, base: SCORING.baseGain, bonus, gain: SCORING.baseGain + bonus };
 }
 
-module.exports = { SCORING, distanceBonus, scoreImage };
+// A whole-number percentage for groups.progress (int4). Any progress at all shows as at least 1,
+// so a started picture never shows 0% in the group list, and only a finished picture shows 100.
+function progressPercent(progress) {
+    if (progress <= 0) return 0;
+    if (progress >= 100) return 100;
+    return Math.min(99, Math.max(1, Math.round(progress)));
+}
+
+module.exports = {
+    SCORING,
+    distanceBonus,
+    scoreImage,
+    progressPercent,
+};
 

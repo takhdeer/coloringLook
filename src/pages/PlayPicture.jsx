@@ -58,6 +58,26 @@ function formatCoordinates(location) {
     return location.latitude.toFixed(5) + ', ' + location.longitude.toFixed(5)
 }
 
+// iPhone photos are HEIC by default. Some browsers leave file.type empty for them, so check the name too
+function isHeic(file) {
+    return file.type === 'image/heic' || file.type === 'image/heif' || /\.hei[cf]$/i.test(file.name)
+}
+
+// Most browsers (and the server's image library) can't decode HEIC, so convert it to a JPEG first.
+// Other images are returned unchanged. The converter is only downloaded when a HEIC photo is picked.
+async function toBrowserImage(file) {
+    if (!isHeic(file)) {
+        return file
+    }
+
+    const { heicTo } = await import('heic-to')
+    const jpeg = await heicTo({ blob: file, type: 'image/jpeg', quality: 0.9 })
+    return new File([jpeg], file.name.replace(/\.hei[cf]$/i, '') + '.jpg', {
+        type: 'image/jpeg',
+        lastModified: file.lastModified,
+    })
+}
+
 // Asks the server for a photo's most prominent colour ('#rrggbb'), or null if it couldn't find one
 async function fetchPhotoColor(file) {
     try {
@@ -90,11 +110,15 @@ function savePhotoLocation(entry) {
 }
 
 // Turns one of the server's colour comparisons into text like "12° hue apart (within 35°)"
+// or "44° hue apart, but both blue"
 function describeComparison(comparison) {
     if (comparison.kind === 'mismatch') {
         return 'colour vs grey, no match'
     }
     if (comparison.kind === 'hue') {
+        if (comparison.sameFamily && comparison.difference > comparison.tolerance) {
+            return comparison.difference + '° hue apart, but both ' + comparison.family
+        }
         return comparison.difference + '° hue apart (within ' + comparison.tolerance + '°)'
     }
     return comparison.difference + ' lightness apart (within ' + comparison.tolerance + ')'
@@ -106,7 +130,10 @@ const RESULT_TITLES = {
     no_colours: 'no colours yet',
 }
 
-export default function PlayPicture({ groupId, children }) {
+// onScored is called after a matched photo's points are saved.
+// onPopupChange(open) is called whenever the confirm or result popup opens or closes, so the page
+// can hold back other popups (like "completed!") until the player is done with this one.
+export default function PlayPicture({ groupId, onScored, onPopupChange, children }) {
     const fileInputRef = useRef(null)
 
     // The image waiting to be confirmed, or null when no popup is open.
@@ -143,6 +170,12 @@ export default function PlayPicture({ groupId, children }) {
         }
     }, [result])
 
+    // Tell the page whether one of this component's popups is showing
+    const popupOpen = Boolean(pending || result)
+    useEffect(() => {
+        onPopupChange?.(popupOpen)
+    }, [popupOpen, onPopupChange])
+
     // Let the Escape key close whichever popup is open (but not while a photo is being checked)
     useEffect(() => {
         if ((!pending && !result) || submitting) {
@@ -168,15 +201,26 @@ export default function PlayPicture({ groupId, children }) {
         fileInputRef.current.click()
     }
 
-    const handleFileChange = (event) => {
-        const file = event.target.files[0]
+    const handleFileChange = async (event) => {
+        const original = event.target.files[0]
 
-        if (!file) {
+        // Clear the input so picking the same file again still fires onChange
+        event.target.value = ''
+
+        if (!original) {
             return
         }
 
-        if (!file.type.startsWith('image/')) {
+        if (!original.type.startsWith('image/') && !isHeic(original)) {
             alert('please choose an image file')
+            return
+        }
+
+        let file
+        try {
+            file = await toBrowserImage(original)
+        } catch {
+            alert("couldn't read this image")
             return
         }
 
@@ -189,8 +233,9 @@ export default function PlayPicture({ groupId, children }) {
             const width = img.naturalWidth
             const height = img.naturalHeight
 
-            // Look for GPS coordinates inside the file (null if there are none)
-            const location = await readLocation(file)
+            // Look for GPS coordinates inside the file (null if there are none). Uses the original,
+            // since converting a HEIC photo to JPEG drops its metadata
+            const location = await readLocation(original)
 
             setPending({
                 file: file,
@@ -221,9 +266,6 @@ export default function PlayPicture({ groupId, children }) {
         }
 
         img.src = url
-
-        // Clear the input so picking the same file again still fires onChange
-        event.target.value = ''
     }
 
     const handleCancel = () => {
@@ -282,6 +324,10 @@ export default function PlayPicture({ groupId, children }) {
                     })
                     const scoreData = await scoreRes.json().catch(() => ({}))
                     score = scoreRes.ok ? scoreData : { error: scoreData.message || `status ${scoreRes.status}` }
+                    // Let the page redraw the picture with the newly filled-in cells
+                    if (scoreRes.ok && onScored) {
+                        onScored()
+                    }
                 } catch {
                     score = { error: 'could not reach the server' }
                 }
