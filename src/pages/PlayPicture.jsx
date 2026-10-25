@@ -126,8 +126,10 @@ const RESULT_TITLES = {
     no_colours: 'no colours yet',
 }
 
-// onScored is called after a matched photo's points are saved
-export default function PlayPicture({ groupId, onScored, children }) {
+// onScored is called after a matched photo's points are saved.
+// onPopupChange(open) is called whenever the confirm or result popup opens or closes, so the page
+// can hold back other popups (like "completed!") until the player is done with this one.
+export default function PlayPicture({ groupId, onScored, onPopupChange, children }) {
     const fileInputRef = useRef(null)
 
     // The image waiting to be confirmed, or null when no popup is open.
@@ -163,6 +165,12 @@ export default function PlayPicture({ groupId, onScored, children }) {
             }
         }
     }, [result])
+
+    // Tell the page whether one of this component's popups is showing
+    const popupOpen = Boolean(pending || result)
+    useEffect(() => {
+        onPopupChange?.(popupOpen)
+    }, [popupOpen, onPopupChange])
 
     // Let the Escape key close whichever popup is open (but not while a photo is being checked)
     useEffect(() => {
