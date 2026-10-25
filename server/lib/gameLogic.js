@@ -5,7 +5,7 @@ const { getColorScores, buildFill, progressFromFill } = require('./colorFill');
 
 async function getGroupProgress(groupId) {
     const result = await pool.query('select progress from public.groups where id = $1', [groupId]);
-    if (result.rowCount === 0) throw new GameError(404, "Group not found");
+    if (result.rowCount === 0) throw new GameError(404, "Book not found");
     return Number(result.rows[0].progress ?? 0);
 }
 
@@ -65,7 +65,7 @@ async function saveUserColors(groupId, userId) {
 // Returns the saved whole percent.
 async function updateGroupProgress(client, groupId) {
     const group = await client.query('select 1 from public.groups where id = $1 for update', [groupId]);
-    if (group.rowCount === 0) throw new GameError(404, "Group not found");
+    if (group.rowCount === 0) throw new GameError(404, "Book not found");
 
     const grid = await getGroupGrid(groupId);
     const scores = await getColorScores(groupId, grid.palette, client);

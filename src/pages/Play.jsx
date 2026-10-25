@@ -7,6 +7,17 @@ import ViewGroups from '../components/ViewGroups'
 import PlayPicture from './PlayPicture'
 import PlayPictureGrid from './PlayPictureGrid'
 import PlayCompleted from './PlayCompleted'
+import PlayProgressBar from './PlayProgressBar'
+
+// Remembers per group that the player closed the "completed!" popup, so a finished group doesn't
+// pop it up on every visit. Storage can be unavailable (private windows); then it may show again.
+const dismissKey = (groupId) => `coloringlook:completed-closed:${groupId}`
+function wasDismissed(groupId) {
+    try { return localStorage.getItem(dismissKey(groupId)) === '1' } catch { return false }
+}
+function rememberDismissed(groupId) {
+    try { localStorage.setItem(dismissKey(groupId), '1') } catch { /* it may show again */ }
+}
 
 export default function Play() {
     const { groupId } = useParams()
@@ -14,9 +25,31 @@ export default function Play() {
     // group list with the new progress
     const [pictureVersion, setPictureVersion] = useState(0)
     const [searchParams] = useSearchParams()
-    // TODO(progress): set this to true once the group's picture is complete. Until that's linked,
-    // add ?completed=1 to the Play page's URL to preview the popup.
-    const [showCompleted, setShowCompleted] = useState(searchParams.has('completed'))
+    // The "completed!" popup opens once the group's progress reaches 100 (only a fully filled-in
+    // picture is 100). Add ?completed=1 to the Play page's URL to preview it any time.
+    // It's tied to the group it opened for, so switching groups in the left panel closes it.
+    const [completedGroup, setCompletedGroup] = useState(searchParams.has('completed') ? groupId : null)
+    // While the upload's confirm/result popup is open, "completed!" waits, so the player first sees
+    // the points for the photo that finished the picture, then the celebration. The picture also
+    // holds back its highlighter animation until it closes.
+    const [uploadPopupOpen, setUploadPopupOpen] = useState(false)
+    const showCompleted = Boolean(groupId) && completedGroup === groupId && !uploadPopupOpen
+    // Latest progress for the progress bar, kept with the group it belongs to so switching groups
+    // doesn't flash the old group's value
+    const [progressFor, setProgressFor] = useState({ groupId: null, value: 0 })
+    const showProgress = Boolean(groupId) && progressFor.groupId === groupId
+
+    // Called with the group's progress whenever the picture loads: when the page opens and after
+    // every scored photo, so it catches both a finished group and the photo that finishes it
+    const handleProgress = (progress) => {
+        setProgressFor({ groupId, value: progress })
+        if (progress >= 100 && !wasDismissed(groupId)) setCompletedGroup(groupId)
+    }
+
+    const closeCompleted = () => {
+        rememberDismissed(groupId)
+        setCompletedGroup(null)
+    }
 
     return (
         <div className="play">
@@ -31,16 +64,27 @@ export default function Play() {
                 </section>
 
                 <section className="play-col play-main">
-                    <PlayPicture groupId={groupId} onScored={() => setPictureVersion((v) => v + 1)}>
-                        <PlayPictureGrid groupId={groupId} refreshKey={pictureVersion} />
+                    <PlayPicture
+                        groupId={groupId}
+                        onScored={() => setPictureVersion((v) => v + 1)}
+                        onPopupChange={setUploadPopupOpen}
+                    >
+                        <PlayPictureGrid
+                            groupId={groupId}
+                            refreshKey={pictureVersion}
+                            onProgress={handleProgress}
+                            paused={uploadPopupOpen}
+                        />
                     </PlayPicture>
+
+                    {showProgress && <PlayProgressBar progress={progressFor.value} />}
                 </section>
 
                 <PlayMembersColumn groupId={groupId} />
             </main>
 
             {showCompleted && (
-                <PlayCompleted groupId={groupId} onClose={() => setShowCompleted(false)} />
+                <PlayCompleted groupId={groupId} onClose={closeCompleted} />
             )}
         </div>
     )

@@ -21,11 +21,11 @@ router.delete('/:groupId/:userId', async (req, res) => {
 
             if (result.rowCount === 0) {
                 await client.query('rollback')
-                return res.status(404).json({message: "You're not in this group"})
+                return res.status(404).json({message: "You're not in this book"})
             }
 
             await client.query('commit')
-            return res.status(200).json({message: "Left Group Sucessfully"})
+            return res.status(200).json({message: "Left Book Successfully"})
         } catch (err) {
             await client.query('rollback')
             console.log(err)
