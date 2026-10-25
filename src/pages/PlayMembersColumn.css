@@ -153,3 +153,28 @@
 .play-members-invite-status.is-error {
     color: #b00020;
 }
+
+.play-members-reassign {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.play-members-reassign-btn {
+    width: 100%;
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    color: #111;
+    background: rgba(255, 255, 255, 0.35);
+    border: 2px solid #111;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.play-members-reassign-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}

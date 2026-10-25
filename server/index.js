@@ -18,6 +18,7 @@ const leaveGroup = require('./routes/groups/leaveGroup')
 const leaderboard = require('./routes/groups/leaderboard')
 const joinGroup = require('./routes/groups/joinGroup')
 const inviteGroup = require('./routes/groups/inviteGroup')
+const reassignColors = require('./routes/groups/reassignColors')
 const getUserGroup = require('./routes/groups/getUserGroup')
 const pixelate = require('./routes/pixelate')
 const spawn = require('./routes/spawn')
@@ -37,6 +38,7 @@ app.use('/api/leaveGroup', leaveGroup);
 app.use('/api/leaderboard', leaderboard);
 app.use('/api/joinGroup', joinGroup);
 app.use('/api/inviteGroup', inviteGroup);
+app.use('/api/reassignColors', reassignColors);
 app.use('/api/getUserGroup', getUserGroup);
 app.use('/api/pixelate', pixelate);
 app.use('/api/spawn', spawn);
