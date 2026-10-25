@@ -20,8 +20,13 @@ router.post('/', async (req, res) => {
                     , [groupId, member]
                 )
             }
-            return res.status(201).json({message: "Book Created Successfully"})
+            // The page needs the new id to upload the book's picture and send invites
+            return res.status(201).json({message: "Book Created Successfully", groupId})
         } catch (err) {
+            // 23505: groups.name is unique (groups_name_key), so the name is already taken
+            if (err.code === '23505' && err.constraint === 'groups_name_key') {
+                return res.status(409).json({message: "A room with that name already exists, pick another name"})
+            }
             console.log(err)
             return res.status(500).json({error: "Database Error", details: err})
         }
