@@ -54,8 +54,41 @@ export default function Play() {
         setCompletedGroup(null)
     }
 
+    // Testing shortcut (dev builds only): fills in the whole picture, then reloads it so the
+    // highlighter paints the rest in and the "completed!" popup follows
+    const [autoCompleting, setAutoCompleting] = useState(false)
+    const handleAutoComplete = async () => {
+        setAutoCompleting(true)
+        try {
+            const res = await fetch(`/api/completeGroup/${groupId}`, { method: 'POST' })
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}))
+                console.log('Could not complete the picture', data.message || res.status)
+                return
+            }
+            // So the popup shows even if it was closed for this group before
+            try { localStorage.removeItem(dismissKey(groupId)) } catch { /* it may not show */ }
+            setPictureVersion((v) => v + 1)
+        } catch (err) {
+            console.log(err)
+        } finally {
+            setAutoCompleting(false)
+        }
+    }
+
     return (
         <div className="play">
+            {import.meta.env.DEV && groupId && (
+                <button
+                    type="button"
+                    className="play-autocomplete"
+                    onClick={handleAutoComplete}
+                    disabled={autoCompleting}
+                >
+                    {autoCompleting ? 'completing...' : 'auto complete'}
+                </button>
+            )}
+
             <h1 className="play-logo">
                 <img src={logo} alt="ColoringLook" />
             </h1>
