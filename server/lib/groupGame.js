@@ -1,17 +1,13 @@
 const pool = require('../db');
 const { supabase } = require('./supabase');
-const { pixelate, matchPaletteColor, matchPhotoColor, comparePhotoColor } = require('./pixelate');
+const { pixelate } = require('./pixelate');
 
 // Supabase Storage bucket holding the image files; public.images.path is a file name in here
 const BUCKET = 'images';
 
-// Every group's picture is pixelated with these settings, so all players see the same cells.
-// The canvas is a square GRID_COLS × GRID_COLS; the picture is fitted inside it, centred.
-const GRID_COLS = 128;
+// Every group's picture is pixelated with these settings, so all players see the same cells
+const GRID_COLS = 48;
 const GRID_COLORS = 8;
-// Picked colours that look closer than this (CIELAB ΔE) are merged, so every palette colour is
-// clearly different and uploaded photos match one unambiguously. Usually leaves 4-6 colours.
-const GRID_MIN_COLOR_DISTANCE = 25;
 
 // An error with the HTTP status a route should answer with
 class GameError extends Error {
@@ -49,40 +45,19 @@ async function getGroupImageId(groupId) {
 // Pixelating takes a moment, and every request for a group needs the same grid, so keep them
 const gridCache = new Map();
 
-// The group's picture as a grid, using the shared settings above.
-// The palette is also saved to public.images.palette so other code (e.g. the photo uploader)
-// can read it straight from the database.
+// The group's picture as a grid, using the shared settings above
 async function getGroupGrid(groupId) {
     const imageId = await getGroupImageId(groupId);
     if (!gridCache.has(imageId)) {
         const file = await loadImageFile(imageId);
-        let grid;
         try {
-            grid = await pixelate(file, { cols: GRID_COLS, colors: GRID_COLORS, minDistance: GRID_MIN_COLOR_DISTANCE, square: true, dropWhite: true });
+            gridCache.set(imageId, await pixelate(file, { cols: GRID_COLS, colors: GRID_COLORS }));
         } catch (err) {
             console.log(err);
             throw new GameError(422, "Stored file could not be read as an image");
         }
-        // Only writes when the stored palette is missing or out of date (e.g. GRID_COLORS changed)
-        await pool.query(
-            'update public.images set palette = $2 where id = $1 and palette is distinct from $2',
-            [imageId, grid.palette]
-        );
-        gridCache.set(imageId, grid);
     }
     return { imageId, ...gridCache.get(imageId) };
-}
-
-// The group picture's palette colour closest to `color` ('#rrggbb' or [r, g, b]), and who owns it.
-// For the photo uploader: matches a photo's dominant colour to one of the picture's colours.
-// Returns { paletteIndex, color, distance, userId, username } (see matchPaletteColor for distance).
-async function matchGroupColor(groupId, color) {
-    const { palette } = await getGroupGrid(groupId);
-    const match = matchPaletteColor(color, palette);
-    if (!match) throw new GameError(422, "This group's picture has no colours");
-    const owners = await getColorOwners(groupId, palette);
-    const { userId, username } = owners[match.paletteIndex];
-    return { ...match, userId, username };
 }
 
 // The group's members in join order, with the palette colours they own (group_members.colors)
@@ -133,44 +108,9 @@ async function getColorOwners(groupId, palette) {
     });
 }
 
-// The most prominent colour of an uploaded photo as '#rrggbb', found exactly like a group picture's
-// palette (same grid size, colour count and merging), then taking the colour that covers the most
-// area. The photo itself isn't kept anywhere.
-async function getPhotoColor(photo) {
-    let result;
-    try {
-        result = await pixelate(photo, { cols: GRID_COLS, colors: GRID_COLORS, minDistance: GRID_MIN_COLOR_DISTANCE });
-    } catch (err) {
-        console.log(err);
-        throw new GameError(422, "Could not read that photo");
-    }
-
-    // Palette is ranked biggest area first, so [0] is the most prominent colour
-    if (result.palette.length === 0) throw new GameError(422, "That photo has no visible colours");
-    return result.palette[0];
-}
-
-// Matches a photo's colour against the colours this player owns in the group's picture (only
-// those are accepted). Returns { match, colors, comparisons } where match is matchPhotoColor's
-// result (null if it's too different from all of them), colors is the player's own colours and
-// comparisons is comparePhotoColor's closeness to each of them.
-async function matchPlayerColor(groupId, userId, photoColor) {
-    const { palette } = await getGroupGrid(groupId);
-    const owners = await getColorOwners(groupId, palette);
-    const colors = owners.filter((o) => o.userId === userId).map((o) => palette[o.paletteIndex]);
-    return {
-        match: colors.length ? matchPhotoColor(photoColor, colors) : null,
-        colors,
-        comparisons: comparePhotoColor(photoColor, colors),
-    };
-}
-
 module.exports = {
     GameError,
-    getPhotoColor,
-    matchPlayerColor,
     loadImageFile,
     getGroupGrid,
     getColorOwners,
-    matchGroupColor,
 };
