@@ -2,6 +2,7 @@ const express = require("express");
 const pool = require("../db");
 const router = express.Router();
 const { GameError, getPhotoColor, matchPlayerColor } = require('../lib/groupGame');
+const { scoreImage } = require('../lib/scoring');
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
