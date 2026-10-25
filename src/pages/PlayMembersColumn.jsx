@@ -34,7 +34,7 @@ function Crayon({ color }) {
     )
 }
 
-export default function PlayMembersColumn({ groupId }) {
+export default function PlayMembersColumn({ groupId, onReassigned }) {
     const [players, setPlayers] = useState([])
     const [error, setError] = useState(null)
     const rowRefs = useRef(new Map())
@@ -43,6 +43,10 @@ export default function PlayMembersColumn({ groupId }) {
     const [inviteStatus, setInviteStatus] = useState(null)   // { ok, message }
     const [inviting, setInviting] = useState(false)
     const [meId, setMeId] = useState(null)
+    const [reassigning, setReassigning] = useState(false)
+    const [reassignStatus, setReassignStatus] = useState(null)   // { ok, message }
+    // Bumped after a reassign so the board reloads straight away instead of on the next poll
+    const [reloadKey, setReloadKey] = useState(0)
 
     // The signed-in player's row gets a darker shade
     useEffect(() => {
@@ -75,6 +79,33 @@ export default function PlayMembersColumn({ groupId }) {
         }
     }
 
+    // Deals every colour out again, so friends who joined after the colours ran out get some
+    const handleReassign = async () => {
+        if (!window.confirm('Reassign every colour in this book? Each colour keeps its points and they move with it.')) return
+        setReassigning(true)
+        setReassignStatus(null)
+        try {
+            const { data: authData } = await supabase.auth.getUser()
+            if (!authData?.user) throw new Error('sign in to reassign colours')
+
+            const res = await fetch('/api/reassignColors', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ groupId, userId: authData.user.id }),
+            })
+            const data = await res.json().catch(() => ({}))
+            if (!res.ok) throw new Error(data.message || data.error || `status ${res.status}`)
+
+            setReassignStatus({ ok: true, message: 'colours reassigned' })
+            setReloadKey((k) => k + 1)
+            onReassigned?.()
+        } catch (err) {
+            setReassignStatus({ ok: false, message: err.message })
+        } finally {
+            setReassigning(false)
+        }
+    }
+
     // Poll the server so the board reorders as scores change
     useEffect(() => {
         if (!groupId) return
@@ -102,7 +133,7 @@ export default function PlayMembersColumn({ groupId }) {
             cancelled = true
             clearInterval(timer)
         }
-    }, [groupId])
+    }, [groupId, reloadKey])
 
     // Slide rows from their old position to the new one when the order changes
     useLayoutEffect(() => {
@@ -183,6 +214,24 @@ export default function PlayMembersColumn({ groupId }) {
                         </p>
                     )}
                 </form>
+            )}
+
+            {groupId && (
+                <div className="play-members-reassign">
+                    <button
+                        type="button"
+                        className="play-members-reassign-btn"
+                        onClick={handleReassign}
+                        disabled={reassigning}
+                    >
+                        {reassigning ? 'reassigning…' : 'reassign colours'}
+                    </button>
+                    {reassignStatus && (
+                        <p className={`play-members-invite-status${reassignStatus.ok ? '' : ' is-error'}`}>
+                            {reassignStatus.message}
+                        </p>
+                    )}
+                </div>
             )}
         </section>
     )

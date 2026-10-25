@@ -1,7 +1,7 @@
 const pool = require('../db');
 const { supabase } = require('./supabase');
 const { pixelate, matchPaletteColor, matchPhotoColor, comparePhotoColor } = require('./pixelate');
-const { dealColors, newPlayerGetsColor } = require('./dealColors');
+const { dealColors } = require('./dealColors');
 
 // Supabase Storage bucket holding the image files; public.images.path is a file name in here
 const BUCKET = 'images';
@@ -132,27 +132,63 @@ async function getColorOwners(groupId, palette) {
     });
 }
 
-// Whether the group's picture has no colour left for one more player, i.e. someone joining now
-// would be dealt nothing (see getColorOwners). A group with no picture yet is never full. Uses the
-// palette saved in public.images, and only pixelates the picture if it hasn't been saved yet.
-async function isGroupFull(groupId) {
-    const result = await pool.query(
-        `select i.palette
-         from public.group_image gi
-         join public.images i on i.id = gi.image_id
-         where gi.group_id = $1
-         order by gi.created_at desc
-         limit 1`,
+// Deals every palette colour out again from scratch, in a random order, so players who joined after
+// all the colours were taken get some too. Each colour keeps its score in public.user_colors and
+// moves with it to its new owner, so the picture stays filled in exactly as before (the points on
+// the leaderboard move with the colour). Run it inside a transaction, passing its client; the
+// group row is locked so a score saved at the same time can't land on the old owner.
+// Returns [{ userId, colors }] in join order.
+async function reassignColors(client, groupId) {
+    const group = await client.query('select 1 from public.groups where id = $1 for update', [groupId]);
+    if (group.rowCount === 0) throw new GameError(404, "Book not found");
+
+    const { palette } = await getGroupGrid(groupId);
+    const members = await getMembers(groupId);
+    if (members.length === 0) return [];
+
+    const shuffled = [...palette];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const dealt = dealColors(members.map(() => []), shuffled);
+
+    // Each colour's total score, then one row per colour under its new owner
+    const scores = await client.query(
+        `select lower(color_id) as color, sum(score) as score
+         from public.user_colors
+         where group_id = $1 and lower(color_id) = any($2::text[])
+         group by lower(color_id)`,
+        [groupId, palette]
+    );
+    const scoreOf = Object.fromEntries(scores.rows.map((r) => [r.color, Number(r.score)]));
+    await client.query('delete from public.user_colors where group_id = $1', [groupId]);
+
+    for (const [i, m] of members.entries()) {
+        await client.query(
+            'update public.group_members set colors = $3 where group_id = $1 and user_id = $2',
+            [groupId, m.userId, dealt[i]]
+        );
+        if (dealt[i].length > 0) {
+            await client.query(
+                `insert into public.user_colors (group_id, user_id, color_id, score)
+                 select $1, $2, c, s from unnest($3::text[], $4::real[]) as t(c, s)`,
+                [groupId, m.userId, dealt[i], dealt[i].map((hex) => scoreOf[hex] ?? 0)]
+            );
+        }
+    }
+
+    // The leaderboard total is the sum of the player's colour scores, which just changed
+    await client.query(
+        `update public.group_members gm
+         set score = coalesce((select sum(uc.score)::int
+                               from public.user_colors uc
+                               where uc.group_id = gm.group_id and uc.user_id = gm.user_id), 0)
+         where gm.group_id = $1`,
         [groupId]
     );
-    if (result.rowCount === 0) return false;
-    let palette = (result.rows[0].palette ?? []).map((c) => c.toLowerCase());
-    if (palette.length === 0) palette = (await getGroupGrid(groupId)).palette;
 
-    const members = await getMembers(groupId);
-    const owned = members.map((m) => m.colors.filter((c) => palette.includes(c)));
-    const unowned = palette.filter((hex) => !owned.some((list) => list.includes(hex)));
-    return !newPlayerGetsColor(owned, unowned);
+    return members.map((m, i) => ({ userId: m.userId, colors: dealt[i] }));
 }
 
 // The most prominent colour of an uploaded photo as '#rrggbb', found exactly like a group picture's
@@ -196,5 +232,5 @@ module.exports = {
     getGroupGrid,
     getColorOwners,
     matchGroupColor,
-    isGroupFull,
+    reassignColors,
 };

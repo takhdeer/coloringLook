@@ -80,7 +80,10 @@ export default function Play() {
                     {showProgress && <PlayProgressBar progress={progressFor.value} />}
                 </section>
 
-                <PlayMembersColumn groupId={groupId} />
+                <PlayMembersColumn
+                    groupId={groupId}
+                    onReassigned={() => setPictureVersion((v) => v + 1)}
+                />
             </main>
 
             {showCompleted && (
