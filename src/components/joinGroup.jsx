@@ -1,19 +1,23 @@
 import '../pages/Spawn.css'
 import './joinGroup.css'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { useState } from 'react'
 import { supabase } from '../lib/supabase.mjs'
 
 export default function JoinGroup() {
     const navigate = useNavigate()
-    const [groupId, setGroupId] = useState('')
+    const [searchParams] = useSearchParams()
+    // Invite emails link to /join?groupId=...
+    const [groupId, setGroupId] = useState(searchParams.get('groupId') ?? '')
     const [errorMessage, setErrorMessage] = useState('')
 
     const handleBack = () => navigate('/play')
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        if (!groupId.trim()) {
+        // Pasted ids often carry spaces or a line break
+        const id = groupId.trim()
+        if (!id) {
             setErrorMessage('Enter a group id')
             return
         }
@@ -36,15 +40,18 @@ export default function JoinGroup() {
         const res = await fetch('http://localhost:3001/api/joinGroup', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ groupId, member: userId})
+            body: JSON.stringify({ groupId: groupId.trim(), member: userId})
         });
+        const data = await res.json().catch(() => ({}))
 
-        if (!res.ok) {
-            setErrorMessage('Server Error')
+        // Joined, or already a member: either way, open the group
+        if (res.ok || data.groupId) {
+            navigate(`/play/${data.groupId ?? id}`)
             return
         }
-        
-        console.log('Join room', { groupId: groupId.trim() })
+
+        setErrorMessage(data.message || 'Server Error')
+        navigate(`/play/${encodeURIComponent(groupId.trim())}`)
     }
 
     return (

@@ -1,6 +1,7 @@
 const pool = require('../db');
 const { supabase } = require('./supabase');
 const { pixelate, matchPaletteColor, matchPhotoColor, comparePhotoColor } = require('./pixelate');
+const { dealColors, newPlayerGetsColor } = require('./dealColors');
 
 // Supabase Storage bucket holding the image files; public.images.path is a file name in here
 const BUCKET = 'images';
@@ -115,12 +116,7 @@ async function getColorOwners(groupId, palette) {
 
     if ((unowned.length > 0 || stale) && members.length > 0) {
         // Anything in colors that isn't in this picture's palette is dropped
-        const owned = members.map((m) => m.colors.filter((c) => palette.includes(c)));
-        for (const hex of unowned) {
-            let pick = 0;
-            owned.forEach((list, i) => { if (list.length < owned[pick].length) pick = i; });
-            owned[pick].push(hex);
-        }
+        const owned = dealColors(members.map((m) => m.colors.filter((c) => palette.includes(c))), unowned);
         for (const [i, m] of members.entries()) {
             await pool.query(
                 'update public.group_members set colors = $3 where group_id = $1 and user_id = $2',
@@ -134,6 +130,29 @@ async function getColorOwners(groupId, palette) {
         const owner = ownerOf(hex);
         return { paletteIndex, userId: owner?.userId ?? null, username: owner?.username ?? null };
     });
+}
+
+// Whether the group's picture has no colour left for one more player, i.e. someone joining now
+// would be dealt nothing (see getColorOwners). A group with no picture yet is never full. Uses the
+// palette saved in public.images, and only pixelates the picture if it hasn't been saved yet.
+async function isGroupFull(groupId) {
+    const result = await pool.query(
+        `select i.palette
+         from public.group_image gi
+         join public.images i on i.id = gi.image_id
+         where gi.group_id = $1
+         order by gi.created_at desc
+         limit 1`,
+        [groupId]
+    );
+    if (result.rowCount === 0) return false;
+    let palette = (result.rows[0].palette ?? []).map((c) => c.toLowerCase());
+    if (palette.length === 0) palette = (await getGroupGrid(groupId)).palette;
+
+    const members = await getMembers(groupId);
+    const owned = members.map((m) => m.colors.filter((c) => palette.includes(c)));
+    const unowned = palette.filter((hex) => !owned.some((list) => list.includes(hex)));
+    return !newPlayerGetsColor(owned, unowned);
 }
 
 // The most prominent colour of an uploaded photo as '#rrggbb', found exactly like a group picture's
@@ -176,4 +195,5 @@ module.exports = {
     getGroupGrid,
     getColorOwners,
     matchGroupColor,
+    isGroupFull,
 };

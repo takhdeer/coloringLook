@@ -78,3 +78,50 @@
     text-align: center;
     color: rgba(0, 0, 0, 0.5);
 }
+
+.play-members-invite {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.play-members-invite-input {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #111;
+    background: rgba(255, 255, 255, 0.5);
+    border: 2px solid #111;
+    border-radius: 12px;
+}
+
+.play-members-invite-btn {
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    color: #111;
+    background: rgba(255, 255, 255, 0.35);
+    border: 2px solid #111;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.play-members-invite-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.play-members-invite-status {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 14px;
+    text-align: center;
+}
+
+.play-members-invite-status.is-error {
+    color: #b00020;
+}

@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { supabase } from '../lib/supabase.mjs'
 import './PlayMembersColumn.css'
 
 const MAX_PLAYERS = 5
@@ -9,6 +10,35 @@ export default function PlayMembersColumn({ groupId }) {
     const [error, setError] = useState(null)
     const rowRefs = useRef(new Map())
     const prevTops = useRef(new Map())
+    const [inviteEmail, setInviteEmail] = useState('')
+    const [inviteStatus, setInviteStatus] = useState(null)   // { ok, message }
+    const [inviting, setInviting] = useState(false)
+
+    const handleInvite = async (e) => {
+        e.preventDefault()
+        if (!inviteEmail.trim()) return
+        setInviting(true)
+        setInviteStatus(null)
+        try {
+            const { data: authData } = await supabase.auth.getUser()
+            if (!authData?.user) throw new Error('sign in to invite friends')
+
+            const res = await fetch('/api/inviteGroup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ groupId, inviterId: authData.user.id, email: inviteEmail.trim() }),
+            })
+            const data = await res.json().catch(() => ({}))
+            if (!res.ok) throw new Error(data.message || data.error || `status ${res.status}`)
+
+            setInviteStatus({ ok: true, message: 'invite sent' })
+            setInviteEmail('')
+        } catch (err) {
+            setInviteStatus({ ok: false, message: err.message })
+        } finally {
+            setInviting(false)
+        }
+    }
 
     // Poll the server so the board reorders as scores change
     useEffect(() => {
@@ -96,6 +126,26 @@ export default function PlayMembersColumn({ groupId }) {
                     </li>
                 ))}
             </ol>
+
+            {groupId && (
+                <form className="play-members-invite" onSubmit={handleInvite}>
+                    <input
+                        type="email"
+                        className="play-members-invite-input"
+                        placeholder="friend's email"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                    />
+                    <button type="submit" className="play-members-invite-btn" disabled={inviting}>
+                        {inviting ? 'sending…' : 'invite'}
+                    </button>
+                    {inviteStatus && (
+                        <p className={`play-members-invite-status${inviteStatus.ok ? '' : ' is-error'}`}>
+                            {inviteStatus.message}
+                        </p>
+                    )}
+                </form>
+            )}
         </section>
     )
 }
