@@ -18,8 +18,9 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/groups" element={<CreateGroup />} />
           <Route path="/join" element={<JoinGroup />} />
+          <Route path="/play" element={<Play />} />
           <Route path="/play/:groupId" element={<Play />} />
         </Routes>
       </BrowserRouter>
     )
-} 
+}
