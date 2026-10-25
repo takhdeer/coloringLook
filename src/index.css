@@ -225,7 +225,7 @@ textarea {
   .play-picture-hover-btn, .play-picture-popup, .play-picture-meta, .play-picture-popup-btn,
   .play-picture-swatch, .play-picture-compare,
   .play-completed-popup, .play-completed-close, .play-completed-player, .play-completed-dot,
-  .create-group-add, .create-group-chip, .group-book-progress
+  .create-group-add, .create-group-chip, .group-book-progress, .play-progress
 ) {
   position: relative;
 }
@@ -235,7 +235,7 @@ textarea {
 .play-picture-hover-btn, .play-picture-popup, .play-picture-meta, .play-picture-popup-btn,
 .play-picture-swatch, .play-picture-compare,
 .play-completed-popup, .play-completed-close, .play-completed-player, .play-completed-dot,
-.create-group-add, .create-group-chip, .group-book-progress {
+.create-group-add, .create-group-chip, .group-book-progress, .play-progress {
   border-color: transparent !important;
 
   &::after {
@@ -261,7 +261,8 @@ textarea {
 
 .form-control,
 .play-members-invite-input,
-.play-picture-popup-img {
+.play-picture-popup-img,
+.play-progress-fill {
   animation: scribble-boil-soft 0.6s steps(1, end) infinite;
 }
 
@@ -269,6 +270,7 @@ textarea {
   .form-control,
   .play-members-invite-input,
   .play-picture-popup-img,
+  .play-progress-fill,
   *::after {
     animation: none !important;
   }

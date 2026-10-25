@@ -7,6 +7,7 @@ import ViewGroups from '../components/ViewGroups'
 import PlayPicture from './PlayPicture'
 import PlayPictureGrid from './PlayPictureGrid'
 import PlayCompleted from './PlayCompleted'
+import PlayProgressBar from './PlayProgressBar'
 
 // Remembers per group that the player closed the "completed!" popup, so a finished group doesn't
 // pop it up on every visit. Storage can be unavailable (private windows); then it may show again.
@@ -33,10 +34,15 @@ export default function Play() {
     // holds back its highlighter animation until it closes.
     const [uploadPopupOpen, setUploadPopupOpen] = useState(false)
     const showCompleted = Boolean(groupId) && completedGroup === groupId && !uploadPopupOpen
+    // Latest progress for the progress bar, kept with the group it belongs to so switching groups
+    // doesn't flash the old group's value
+    const [progressFor, setProgressFor] = useState({ groupId: null, value: 0 })
+    const showProgress = Boolean(groupId) && progressFor.groupId === groupId
 
     // Called with the group's progress whenever the picture loads: when the page opens and after
     // every scored photo, so it catches both a finished group and the photo that finishes it
     const handleProgress = (progress) => {
+        setProgressFor({ groupId, value: progress })
         if (progress >= 100 && !wasDismissed(groupId)) setCompletedGroup(groupId)
     }
 
@@ -70,6 +76,8 @@ export default function Play() {
                             paused={uploadPopupOpen}
                         />
                     </PlayPicture>
+
+                    {showProgress && <PlayProgressBar progress={progressFor.value} />}
                 </section>
 
                 <PlayMembersColumn groupId={groupId} />

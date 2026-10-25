@@ -1,0 +1,34 @@
+/* The ink outline comes from the scribble rules in index.css; position: absolute here
+   wins over their zero-specificity position: relative */
+.play-progress {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    z-index: 2;
+    height: 22px;
+    border: 2px solid #111;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.85);
+    /* Never block clicks on the picture underneath */
+    pointer-events: none;
+}
+
+/* No overflow: hidden on the track, it would clip the scribble outline, so the fill rounds itself */
+.play-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: rgb(0, 255, 179);
+    transition: width 0.6s ease;
+}
+
+.play-progress-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #111;
+}
