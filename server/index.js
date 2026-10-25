@@ -21,7 +21,7 @@ const pixelate = require('./routes/pixelate')
 const spawn = require('./routes/spawn')
 const photoColor = require('./routes/photoColor')
 const userColors = require('./routes/userColors')
-
+const score = require('./routes/score')
 
 // Endpoints
 app.use('/api/register', registerRoute);
@@ -35,6 +35,7 @@ app.use('/api/pixelate', pixelate);
 app.use('/api/spawn', spawn);
 app.use('/api/photoColor', photoColor);
 app.use('/api/userColors', userColors);
+app.use('/api/score', score);
 
 // Test endpoints 
 app.get("/db-test", async (_req, res) => {

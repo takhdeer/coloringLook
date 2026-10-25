@@ -264,7 +264,30 @@ export default function PlayPicture({ groupId, children }) {
                 groupId: groupId,
                 savedAt: new Date().toISOString(),
             })
-            outcome = { data: data, location: location, locationSaved: locationSaved }
+
+            // A matched photo earns points: the server measures how far from spawn it was taken
+            let score = null
+            if (data.status === 'matched') {
+                try {
+                    const scoreRes = await fetch('/api/score', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: authData.user.id,
+                            groupId: groupId,
+                            color: data.color,
+                            latitude: location ? location.latitude : undefined,
+                            longitude: location ? location.longitude : undefined,
+                        }),
+                    })
+                    const scoreData = await scoreRes.json().catch(() => ({}))
+                    score = scoreRes.ok ? scoreData : { error: scoreData.message || `status ${scoreRes.status}` }
+                } catch {
+                    score = { error: 'could not reach the server' }
+                }
+            }
+
+            outcome = { data: data, location: location, locationSaved: locationSaved, score: score }
         } catch (err) {
             outcome = { error: err.message }
         }
@@ -448,6 +471,18 @@ export default function PlayPicture({ groupId, children }) {
                                         />
                                         <span>counts as your {result.data.color}</span>
                                     </div>
+                                )}
+
+                                {result.score && (
+                                    <p className="play-picture-popup-hint">
+                                        {result.score.error
+                                            ? "couldn't add points: " + result.score.error
+                                            : '+' + result.score.points + ' points ('
+                                            + (result.score.distanceKm === null
+                                                ? 'no location, base points only'
+                                                : result.score.distanceKm + ' km from spawn')
+                                            + '), total ' + result.score.newScore}
+                                    </p>
                                 )}
 
                                 {result.data.status === 'no_colours' && (
