@@ -163,7 +163,7 @@ export default function ViewGroups({ refreshKey }) {
     // The trash can on a row: leaves that group without also opening it
     const handleLeave = async (event, group) => {
         event.stopPropagation()
-        if (!userId || !window.confirm(`Leave "${group.name}"?`)) return
+        if (!userId || !window.confirm(`Leave "${group.name}"? If you're the last one in it, the book is deleted.`)) return
 
         try {
             await leaveGroup(group.id, userId)
