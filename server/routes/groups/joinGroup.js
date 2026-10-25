@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
     const groupId = String(req.body?.groupId ?? '').trim().toLowerCase();
     const member = String(req.body?.member ?? '').trim().toLowerCase();
     if (!UUID.test(groupId)) {
-        return res.status(400).json({message: "That doesn't look like a group id"})
+        return res.status(400).json({message: "That doesn't look like a book id"})
     }
     if (!UUID.test(member)) {
         return res.status(400).json({message: "Member id is needed"})
@@ -29,7 +29,7 @@ router.post('/', async (req, res) => {
         const group = await client.query('select 1 from public.groups where id = $1 for update', [groupId])
         if (group.rowCount === 0) {
             await client.query('rollback')
-            return res.status(404).json({message: "No group has that id"})
+            return res.status(404).json({message: "No book has that id"})
         }
 
         const existing = await client.query(
@@ -37,7 +37,7 @@ router.post('/', async (req, res) => {
         )
         if (existing.rowCount > 0) {
             await client.query('rollback')
-            return res.status(409).json({message: "You're already in this group", groupId})
+            return res.status(409).json({message: "You're already in this book", groupId})
         }
 
         // A new player would be dealt no colour, so they'd have nothing to colour in
@@ -52,7 +52,7 @@ router.post('/', async (req, res) => {
             , [groupId, member]
         )
         await client.query('commit')
-        return res.status(201).json({message: "Joined Group Sucessfully", groupId})
+        return res.status(201).json({message: "Joined Book Successfully", groupId})
     } catch (err) {
         await client.query('rollback').catch(() => {})
         console.log(err)

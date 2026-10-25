@@ -253,7 +253,7 @@ export default function PlayPictureGrid({ groupId, refreshKey, onProgress, pause
     }, [groupId, picture, boxWidth, swipes, paused])
 
     if (!groupId) {
-        return <p className="play-grid-message">pick a group on the left to see its picture</p>
+        return <p className="play-grid-message">pick a book on the left to see its picture</p>
     }
     if (error) {
         return <p className="play-grid-message">couldn't load the picture: {error}</p>
@@ -264,7 +264,7 @@ export default function PlayPictureGrid({ groupId, refreshKey, onProgress, pause
 
     return (
         <div ref={boxRef} className="play-grid">
-            <canvas ref={canvasRef} className="play-grid-canvas" role="img" aria-label="the group's picture" />
+            <canvas ref={canvasRef} className="play-grid-canvas" role="img" aria-label="the book's picture" />
         </div>
     )
 }

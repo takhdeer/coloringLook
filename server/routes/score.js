@@ -58,12 +58,12 @@ router.post('/', async (req, res) => {
             'select 1 from public.group_members where group_id = $1 and user_id = $2', [groupId, userId]
         );
         if (member.rowCount === 0) {
-            return res.status(403).json({ message: "You're not in this group" });
+            return res.status(403).json({ message: "You're not in this book" });
         }
         // Also makes sure the player's user_colors rows exist (safe to call again, never resets a score)
         const ownedColors = await saveUserColors(groupId, userId);
         if (!ownedColors.includes(color)) {
-            return res.status(403).json({ message: "That colour isn't one of yours in this group" });
+            return res.status(403).json({ message: "That colour isn't one of yours in this book" });
         }
 
         // ---- steps 1-3: spawnpoint -> distance to the photo, in km ----

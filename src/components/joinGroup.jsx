@@ -18,7 +18,7 @@ export default function JoinGroup() {
         // Pasted ids often carry spaces or a line break
         const id = groupId.trim()
         if (!id) {
-            setErrorMessage('Enter a group id')
+            setErrorMessage('Enter a book id')
             return
         }
         setErrorMessage('')
@@ -65,7 +65,7 @@ export default function JoinGroup() {
             <form className="join-group-card" onSubmit={handleSubmit}>
                 <div className="join-group-field">
                     <label htmlFor="groupId" className="form-label">
-                        group id
+                        book id
                     </label>
                     <input
                         type="text"

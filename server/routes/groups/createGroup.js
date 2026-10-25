@@ -5,8 +5,8 @@ const router = express.Router()
 router.post('/', async (req, res) => {
     const { groupName, groupMembers} = req.body
         if (!groupName || !groupMembers) {
-            console.log("Group name and Group Members are neeeded")
-            return res.status(400).json({message: "Group name and Group Members are neeeded"})
+            console.log("Book name and Book Members are needed")
+            return res.status(400).json({message: "Book name and Book Members are needed"})
         }
 
         try {
@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
                     , [groupId, member]
                 )
             }
-            return res.status(201).json({message: "Group Created Sucessfully"})
+            return res.status(201).json({message: "Book Created Successfully"})
         } catch (err) {
             console.log(err)
             return res.status(500).json({error: "Database Error", details: err})

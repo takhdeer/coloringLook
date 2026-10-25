@@ -58,13 +58,18 @@
 }
 
 .group-book-label {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    width: 100%;
     white-space: nowrap;
+    line-height: 1.2;
     font-weight: 700;
     color: #111;
     text-align: center;
+}
+
+/* Even the smallest font is too wide: wrap instead of cutting the name off */
+.group-book-label.is-wrapped {
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 /* Progress badge in the cover's bottom-right corner */

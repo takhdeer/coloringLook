@@ -10,7 +10,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 router.post('/', async (req, res) => {
     const { groupId, inviterId, email } = req.body
         if (!groupId || !inviterId || !email) {
-            return res.status(400).json({message: "Group id, inviter id and email are needed"})
+            return res.status(400).json({message: "Book id, inviter id and email are needed"})
         }
         if (!EMAIL_RE.test(email)) {
             return res.status(400).json({message: "Invalid email address"})
@@ -26,7 +26,7 @@ router.post('/', async (req, res) => {
                 [groupId, inviterId]
             );
             if (result.rows.length === 0) {
-                return res.status(403).json({message: "You are not a member of this group"})
+                return res.status(403).json({message: "You are not a member of this book"})
             }
 
             const { group_name, username } = result.rows[0]
