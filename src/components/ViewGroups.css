@@ -18,3 +18,34 @@
     transform: translateY(-2px);
     background: rgba(255, 255, 255, 0.6);
 }
+
+/* Trash can next to a group's name: leaves the group */
+.group-leave-btn {
+    display: flex;
+    align-self: center;
+    padding: 2px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    /* Hidden until the row is hovered (or the button gets keyboard focus) */
+    opacity: 0;
+    transition: opacity 0.2s, background 0.2s;
+}
+
+.group-row:hover .group-leave-btn,
+.group-row:focus-within .group-leave-btn {
+    opacity: 0.6;
+}
+
+.group-leave-btn:hover,
+.group-leave-btn:focus-visible {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.group-leave-icon {
+    display: block;
+    width: 18px;
+    height: 18px;
+}

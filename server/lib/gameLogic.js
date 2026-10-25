@@ -1,6 +1,7 @@
 const pool = require('../db');
 const { GameError, getGroupGrid, getColorOwners } = require('./groupGame');
 const { greyscalePalette } = require('./greyscale');
+const { getColorScores, buildFill } = require('./colorFill');
 const { countColorCells, weightedProgress, progressPercent } = require('./scoring');
 
 async function getGroupProgress(groupId) {
@@ -9,21 +10,21 @@ async function getGroupProgress(groupId) {
     return Number(result.rows[0].progress ?? 0);
 }
 
-// A picture nobody has started colouring yet is shown in greyscale
-function isGreyscale(progress) {
-    return progress <= 0;
-}
-
-// The group's grid as players should see it right now: adds { progress, greyscale } and swaps in a
-// grey palette when greyscale. Returns a new object, so the cached grid keeps its real colours.
+// The group's grid as players should see it right now. Cells that aren't filled in yet are drawn
+// grey: each colour fills in as its score goes up (see colorFill.js), so with no score at all the
+// whole picture is greyscale. Adds { progress, greyscale, greyPalette, filled, fill } and returns a
+// new object, so the cached grid is never changed.
 async function applyGameState(groupId, grid) {
     const progress = await getGroupProgress(groupId);
-    const greyscale = isGreyscale(progress);
+    const scores = await getColorScores(groupId, grid.palette);
+    const { filled, fill } = buildFill(grid.imageId, grid.grid, grid.palette, scores);
     return {
         ...grid,
         progress,
-        greyscale,
-        palette: greyscale ? greyscalePalette(grid.palette) : grid.palette,
+        greyscale: fill.every((f) => f.filledCells === 0),
+        greyPalette: greyscalePalette(grid.palette),
+        filled,
+        fill,
     };
 }
 
@@ -43,6 +44,13 @@ async function saveUserColors(groupId, userId) {
             [groupId, userId, colors]
         );
     }
+    // Drop rows for colours the player no longer owns (e.g. the palette changed), so every row
+    // matches a colour in the picture and its score fills it in
+    await pool.query(
+        `delete from public.user_colors
+         where group_id = $1 and user_id = $2 and not (color_id = any($3::text[]))`,
+        [groupId, userId, colors]
+    );
     return colors;
 }
 
@@ -109,6 +117,5 @@ module.exports = {
     saveUserColors,
     addProgress,
     getGroupProgress,
-    isGreyscale,
     applyGameState,
 };

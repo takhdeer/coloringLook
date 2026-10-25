@@ -14,6 +14,7 @@ const registerRoute = require('./routes/register');
 const loginRoute = require('./routes/login')
 const createGroup = require('./routes/groups/createGroup')
 const deleteGroup = require('./routes/groups/deleteGroup')
+const leaveGroup = require('./routes/groups/leaveGroup')
 const leaderboard = require('./routes/groups/leaderboard')
 const joinGroup = require('./routes/groups/joinGroup')
 const getUserGroup = require('./routes/groups/getUserGroup')
@@ -21,13 +22,14 @@ const pixelate = require('./routes/pixelate')
 const spawn = require('./routes/spawn')
 const photoColor = require('./routes/photoColor')
 const userColors = require('./routes/userColors')
-
+const score = require('./routes/score')
 
 // Endpoints
 app.use('/api/register', registerRoute);
 app.use('/api/login', loginRoute);
 app.use('/api/createGroup', createGroup);
 app.use('/api/deleteGroup', deleteGroup);
+app.use('/api/leaveGroup', leaveGroup);
 app.use('/api/leaderboard', leaderboard);
 app.use('/api/joinGroup', joinGroup);
 app.use('/api/getUserGroup', getUserGroup);
@@ -35,6 +37,7 @@ app.use('/api/pixelate', pixelate);
 app.use('/api/spawn', spawn);
 app.use('/api/photoColor', photoColor);
 app.use('/api/userColors', userColors);
+app.use('/api/score', score);
 
 // Test endpoints 
 app.get("/db-test", async (_req, res) => {
