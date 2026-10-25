@@ -9,22 +9,86 @@
 .play-members-title {
     padding-left: 0.5rem;
 }
-.group-row {
-    cursor: pointer;
+/* Each group is a colouring book with its name underneath */
+.group-books {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 20px 12px;
 }
 
-.group-row:hover,
-.group-row:focus-visible {
-    transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.6);
-}
-
-/* Trash can next to a group's name: leaves the group */
-.group-leave-btn {
+.group-book {
     display: flex;
-    align-self: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 6px;
+    border-radius: 12px;
+    cursor: pointer;
+    outline: none;
+}
+
+.group-book-cover {
+    position: relative;
+    width: 100%;
+    max-width: 110px;
+    transition: transform 0.2s ease;
+}
+
+.group-book:hover .group-book-cover,
+.group-book:focus-visible .group-book-cover {
+    transform: translateY(-4px) rotate(-2deg);
+}
+
+.group-book:focus-visible {
+    box-shadow: 0 0 0 2px #111;
+}
+
+.group-book-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.group-book.is-open .group-book-svg {
+    filter: drop-shadow(3px 3px 0 #111);
+}
+
+.group-book-label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+    color: #111;
+    text-align: center;
+}
+
+/* Progress badge in the cover's bottom-right corner */
+.group-book-progress {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    padding: 1px 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #111;
+    background: #fff;
+    border: 2px solid #111;
+    border-radius: 10px;
+}
+
+/* Trash can in the cover's top-right corner: leaves the group */
+.group-leave-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: flex;
     padding: 2px;
-    background: transparent;
+    background: #fff;
     border: none;
     border-radius: 6px;
     cursor: pointer;
@@ -33,15 +97,15 @@
     transition: opacity 0.2s, background 0.2s;
 }
 
-.group-row:hover .group-leave-btn,
-.group-row:focus-within .group-leave-btn {
-    opacity: 0.6;
+.group-book:hover .group-leave-btn,
+.group-book:focus-within .group-leave-btn {
+    opacity: 0.8;
 }
 
 .group-leave-btn:hover,
 .group-leave-btn:focus-visible {
     opacity: 1;
-    background: rgba(0, 0, 0, 0.08);
+    background: #f1f1f1;
 }
 
 .group-leave-icon {

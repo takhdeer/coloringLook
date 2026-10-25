@@ -29,6 +29,56 @@ async function leaveGroup(groupId, userId) {
     }
 };
 
+// Cover colours for the colouring books, handed out in list order so no two books share one
+const COVER_COLORS = ['#f4a261', '#e76f51', '#2a9d8f', '#8ab17d', '#e9c46a', '#a28bd4', '#6fa8dc', '#f28fad']
+const PETAL_COLORS = ['#ff6b6b', '#ffa94d', '#ffd43b', '#69db7c', '#74c0fc']
+
+// Past the fixed colours, step the hue by the golden angle so every extra book still gets a new colour
+function coverColor(index) {
+    if (index < COVER_COLORS.length) return COVER_COLORS[index]
+    const hue = Math.round((index * 137.508) % 360)
+    return `hsl(${hue}, 60%, 65%)`
+}
+
+// A colouring book whose flower gets one more petal coloured in for every 20% of progress
+function ColoringBookIcon({ color, progress }) {
+    const coloredPetals = Math.floor((Number(progress) || 0) / 20)
+
+    return (
+        <svg className="group-book-svg" viewBox="0 0 100 124" aria-hidden="true">
+            {/* Pages peeking out from behind the cover */}
+            <rect x="12" y="8" width="84" height="112" rx="6" fill="#fff" stroke="#111" strokeWidth="2.5" />
+            <line x1="90" y1="14" x2="90" y2="114" stroke="#111" strokeWidth="1" opacity="0.4" />
+            {/* Cover and spine */}
+            <rect x="4" y="4" width="84" height="112" rx="6" fill={color} stroke="#111" strokeWidth="2.5" />
+            <path d="M18 4 V116" stroke="#111" strokeWidth="2.5" />
+            <path d="M11 14 V106" stroke="#111" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.5" />
+            {/* Line-art panel on the cover */}
+            <rect x="26" y="20" width="54" height="66" rx="4" fill="#fff" stroke="#111" strokeWidth="2" />
+            <g transform="translate(53 50)">
+                {PETAL_COLORS.map((petalColor, i) => (
+                    <ellipse
+                        key={petalColor}
+                        cx="0"
+                        cy="-12"
+                        rx="7"
+                        ry="11"
+                        transform={`rotate(${i * 72})`}
+                        fill={i < coloredPetals ? petalColor : '#fff'}
+                        stroke="#111"
+                        strokeWidth="1.8"
+                    />
+                ))}
+                <circle r="6" fill={coloredPetals >= 5 ? '#ffd43b' : '#fff'} stroke="#111" strokeWidth="1.8" />
+            </g>
+            <path d="M53 62 V82 M53 74 q-8 -2 -10 -8 M53 72 q8 -2 10 -8" fill="none" stroke="#111" strokeWidth="1.8" strokeLinecap="round" />
+            {/* Title lines */}
+            <rect x="30" y="94" width="46" height="5" rx="2.5" fill="#fff" stroke="#111" strokeWidth="1.5" />
+            <rect x="36" y="103" width="34" height="4" rx="2" fill="#fff" stroke="#111" strokeWidth="1.5" opacity="0.7" />
+        </svg>
+    )
+}
+
 // Changing refreshKey loads the groups again (e.g. after a score changes a group's progress)
 export default function ViewGroups({ refreshKey }) {
     const navigate = useNavigate()
@@ -102,11 +152,11 @@ export default function ViewGroups({ refreshKey }) {
             ) : groups.length === 0 ? (
                 <p className="play-members-empty">You are not in any groups yet</p>
             ) : (
-                <ol className="play-members-list">
-                    {groups.map((group) => (
+                <ul className="group-books">
+                    {groups.map((group, index) => (
                         <li
                             key={group.id}
-                            className="play-members-row group-row"
+                            className={`group-book${openGroupId === group.id ? ' is-open' : ''}`}
                             role="button"
                             tabIndex={0}
                             onClick={() => navigate(`/play/${group.id}`)}
@@ -117,8 +167,9 @@ export default function ViewGroups({ refreshKey }) {
                                 }
                             }}
                         >
-                            <div className="play-members-header">
-                                <span className="play-members-name">{group.name}</span>
+                            <div className="group-book-cover">
+                                <ColoringBookIcon color={coverColor(index)} progress={group.progress} />
+                                <span className="group-book-progress">{group.progress}%</span>
                                 <button
                                     type="button"
                                     className="group-leave-btn"
@@ -129,11 +180,11 @@ export default function ViewGroups({ refreshKey }) {
                                 >
                                     <img className="group-leave-icon" src={trashIcon} alt="" />
                                 </button>
-                                <span className='play-members-score'>{group.progress}</span>
                             </div>
+                            <span className="group-book-label" title={group.name}>{group.name}</span>
                         </li>
                     ))}
-                </ol>
+                </ul>
             )}
         </div>
     );
