@@ -173,7 +173,7 @@ export default function PlayPicture({ groupId, onScored, children }) {
         const handleKeyDown = (event) => {
             if (event.key === 'Escape') {
                 setPending(null)
-                setResult(null)
+                handleCloseResult()
             }
         }
 
@@ -332,7 +332,12 @@ export default function PlayPicture({ groupId, onScored, children }) {
         setSubmitting(false)
     }
 
+    // Once the points are saved, closing the popup reloads the page so everything shows the new scores
     const handleCloseResult = () => {
+        if (result && result.score && !result.score.error) {
+            window.location.reload()
+            return
+        }
         setResult(null)
     }
 
