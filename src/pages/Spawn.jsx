@@ -63,6 +63,7 @@ export default function Spawn() {
             setMessage('Server Error')
         } finally {
             setIsSubmitting(false)
+            navigate('/play')
         }
     }
 
