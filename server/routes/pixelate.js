@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const { pixelate } = require('../lib/pixelate');
 const { GameError, loadImageFile, getGroupGrid, getColorOwners, matchGroupColor } = require('../lib/groupGame');
-const { applyGameState } = require('../lib/gameLogic');
 
 // Sends a GameError's status and message, or a 500 for anything unexpected
 function sendError(res, err) {
@@ -38,9 +37,8 @@ router.get('/group/:groupId', async (req, res) => {
 
     try {
         const grid = await getGroupGrid(groupId);
-        // Owners are matched on the real palette; the game state may then swap in a grey one
         const owners = await getColorOwners(groupId, grid.palette);
-        return res.status(200).json({ groupId, ...await applyGameState(groupId, grid), owners });
+        return res.status(200).json({ groupId, ...grid, owners });
     } catch (err) {
         return sendError(res, err);
     }
