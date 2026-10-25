@@ -7,6 +7,8 @@
     align-items: center;
     justify-content: center;
     padding: 16px;
+    /* Scroll here, not inside the popup, so its animated border (index.css) isn't clipped */
+    overflow-y: auto;
     background: rgba(0, 0, 0, 0.45);
 }
 
@@ -14,8 +16,8 @@
     position: relative;
     width: 100%;
     max-width: 420px;
-    max-height: calc(100vh - 32px);
-    overflow-y: auto;
+    /* Centred, but starts at the top when taller than the screen */
+    margin: auto;
     padding: 20px;
     text-align: center;
     font-family: 'Comic Sans MS', 'Comic Neue', cursive;
