@@ -1,6 +1,6 @@
 const express = require("express");
 const pool = require("../../db");
-const { isGameInProgress } = require("../../lib/groupGame");
+const { isGroupFull } = require("../../lib/groupGame");
 const router = express.Router()
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -10,7 +10,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 //   400 { message }           groupId or member isn't a uuid (surrounding spaces and case are ignored)
 //   404 { message }           no group has that id
 //   409 { message, groupId }  already in the group (groupId is sent so the page can open it)
-//   409 { message }           the game has already started
+//   409 { message }           the group has a picture and no colour would be left for a new player
 router.post('/', async (req, res) => {
     // Pasted ids often carry spaces or a line break, which Postgres rejects as a uuid
     const groupId = String(req.body?.groupId ?? '').trim().toLowerCase();
@@ -22,33 +22,44 @@ router.post('/', async (req, res) => {
         return res.status(400).json({message: "Member id is needed"})
     }
 
+    const client = await pool.connect()
     try {
-        const group = await pool.query('select 1 from public.groups where id = $1', [groupId])
+        await client.query('begin')
+        // Locks the group row, so two people joining at once can't both take the last colour
+        const group = await client.query('select 1 from public.groups where id = $1 for update', [groupId])
         if (group.rowCount === 0) {
+            await client.query('rollback')
             return res.status(404).json({message: "No group has that id"})
         }
 
-        const existing = await pool.query(
+        const existing = await client.query(
             'select 1 from public.group_members where group_id = $1 and user_id = $2', [groupId, member]
         )
         if (existing.rowCount > 0) {
+            await client.query('rollback')
             return res.status(409).json({message: "You're already in this group", groupId})
         }
 
-        // Every colour is already dealt out, so a new player would have nothing to colour in
-        if (await isGameInProgress(groupId)) {
-            return res.status(409).json({message: "This game has already started, so you can't join it"})
+        // A new player would be dealt no colour, so they'd have nothing to colour in
+        if (await isGroupFull(groupId)) {
+            await client.query('rollback')
+            return res.status(409).json({message: "This game has already started and has no colour left for you, so you can't join it"})
         }
 
         // on conflict: two clicks at once shouldn't turn into a duplicate key error
-        await pool.query(
+        await client.query(
             'insert into public.group_members (group_id, user_id) values ($1,$2) on conflict do nothing'
             , [groupId, member]
         )
+        await client.query('commit')
         return res.status(201).json({message: "Joined Group Sucessfully", groupId})
     } catch (err) {
+        await client.query('rollback').catch(() => {})
         console.log(err)
-        return res.status(500).json({message: "Server Error", details: err.message})
+        // GameError (e.g. the picture couldn't be downloaded) carries its own status
+        return res.status(err.status ?? 500).json({message: err.status ? err.message : "Server Error", details: err.message})
+    } finally {
+        client.release()
     }
 });
 
