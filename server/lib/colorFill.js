@@ -48,9 +48,9 @@ function fillOrder(grid, paletteIndex, seed) {
 }
 
 // The total score of each palette colour in the group (public.user_colors.score), as { hex: score }.
-// Colours with no row count as 0.
-async function getColorScores(groupId, palette) {
-    const result = await pool.query(
+// Colours with no row count as 0. Pass a transaction's client as `db` to see its uncommitted scores.
+async function getColorScores(groupId, palette, db = pool) {
+    const result = await db.query(
         `select lower(color_id) as color, sum(score)::int as score
          from public.user_colors
          where group_id = $1 and lower(color_id) = any($2::text[])

@@ -106,7 +106,8 @@ const RESULT_TITLES = {
     no_colours: 'no colours yet',
 }
 
-export default function PlayPicture({ groupId, children }) {
+// onScored is called after a matched photo's points are saved
+export default function PlayPicture({ groupId, onScored, children }) {
     const fileInputRef = useRef(null)
 
     // The image waiting to be confirmed, or null when no popup is open.
@@ -282,6 +283,10 @@ export default function PlayPicture({ groupId, children }) {
                     })
                     const scoreData = await scoreRes.json().catch(() => ({}))
                     score = scoreRes.ok ? scoreData : { error: scoreData.message || `status ${scoreRes.status}` }
+                    // Let the page redraw the picture with the newly filled-in cells
+                    if (scoreRes.ok && onScored) {
+                        onScored()
+                    }
                 } catch {
                     score = { error: 'could not reach the server' }
                 }

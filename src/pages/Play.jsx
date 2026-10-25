@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams } from 'react-router'
 import './Play.css'
 import logo from '../assets/coloringlook-logo.svg'
@@ -8,6 +9,8 @@ import PlayPictureGrid from './PlayPictureGrid'
 
 export default function Play() {
     const { groupId } = useParams()
+    // Goes up each time a photo scores, so the grid reloads and shows the newly filled-in cells
+    const [pictureVersion, setPictureVersion] = useState(0)
 
     return (
         <div className="play">
@@ -22,8 +25,8 @@ export default function Play() {
                 </section>
 
                 <section className="play-col play-main">
-                    <PlayPicture groupId={groupId}>
-                        <PlayPictureGrid groupId={groupId} />
+                    <PlayPicture groupId={groupId} onScored={() => setPictureVersion((v) => v + 1)}>
+                        <PlayPictureGrid groupId={groupId} refreshKey={pictureVersion} />
                     </PlayPicture>
                 </section>
 

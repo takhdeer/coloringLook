@@ -3,22 +3,16 @@ const pool = require("../db");
 const router = express.Router();
 const { GameError, getPhotoColor, matchPlayerColor } = require('../lib/groupGame');
 const { scoreImage } = require('../lib/scoring');
-const { addProgress } = require('../lib/gameLogic');
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 // POST /api/photoColor?userId=<uuid>&groupId=<uuid>
 // Body: the photo file itself (Content-Type image/*), e.g. fetch(url, { method: 'POST', body: file })
 // Finds the photo's most prominent colour and matches it to the player's own colours in the
-// group's picture. A match adds the photo's gain (lib/scoring.js) to that colour's score in
-// public.user_colors and updates the group's total in public.groups.progress (lib/gameLogic.js).
-// The photo itself is never stored. Responds with a status the page can show:
-//   matched     200 { status, color, photoColor, comparisons, distanceKm, base, bonus, gain,
-//                     colorScore, memberProgress, groupProgress }
-//                   color = the player's colour it counts as, gain = base + bonus = percentage
-//                   points added to it, colorScore = that colour's new score, memberProgress =
-//                   the player's completion over all their colours, groupProgress = the group's
-//                   total (whole number, as saved)
+// group's picture. Nothing is stored (not the photo, not the colour). Responds with a status the
+// page can show:
+//   matched     200 { status, color, photoColor, comparisons }
+//                   color = the player's colour it counts as
 //   no_match    200 { status, message, photoColor, yourColors, comparisons }
 //                   too different from all their colours
 //   no_colours  200 { status, message, photoColor }  the player owns no colours yet
@@ -59,15 +53,7 @@ router.post('/', express.raw({ type: 'image/*', limit: '15mb' }), async (req, re
             });
         }
 
-        // Steps 1-3 (spawnpoint from the DB, image coords, distance) aren't done yet, so every
-        // matched photo scores the base gain for now
-        const distanceKm = null;
-        const score = scoreImage(distanceKm);
-        const progress = await addProgress(groupId, userId, match.color, score.gain);
-
-        return res.status(200).json({
-            status: 'matched', color: match.color, photoColor, comparisons, ...score, ...progress,
-        });
+        return res.status(200).json({ status: 'matched', color: match.color, photoColor, comparisons });
     } catch (err) {
         if (err instanceof GameError) {
             return res.status(err.status).json({ message: err.message, ...err.extra });
