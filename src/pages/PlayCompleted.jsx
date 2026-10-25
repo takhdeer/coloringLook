@@ -52,7 +52,7 @@ export default function PlayCompleted({ groupId, onClose }) {
                 <div className="play-completed-stats">
                     <div className="play-completed-stat">
                         <span className="play-completed-stat-value">{totalScore}</span>
-                        <span className="play-completed-stat-label">group score</span>
+                        <span className="play-completed-stat-label">book score</span>
                     </div>
                     <div className="play-completed-stat">
                         <span className="play-completed-stat-value">{colorCount}</span>

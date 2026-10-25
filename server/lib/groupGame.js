@@ -43,7 +43,7 @@ async function getGroupImageId(groupId) {
         'select image_id from public.group_image where group_id = $1 order by created_at desc limit 1',
         [groupId]
     );
-    if (result.rowCount === 0) throw new GameError(404, "This group has no picture yet");
+    if (result.rowCount === 0) throw new GameError(404, "This book has no picture yet");
     return Number(result.rows[0].image_id);
 }
 
@@ -80,7 +80,7 @@ async function getGroupGrid(groupId) {
 async function matchGroupColor(groupId, color) {
     const { palette } = await getGroupGrid(groupId);
     const match = matchPaletteColor(color, palette);
-    if (!match) throw new GameError(422, "This group's picture has no colours");
+    if (!match) throw new GameError(422, "This book's picture has no colours");
     const owners = await getColorOwners(groupId, palette);
     const { userId, username } = owners[match.paletteIndex];
     return { ...match, userId, username };

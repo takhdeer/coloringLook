@@ -39,7 +39,7 @@ router.post('/', readPhoto, async (req, res) => {
             'select 1 from public.group_members where group_id = $1 and user_id = $2', [groupId, userId]
         );
         if (member.rowCount === 0) {
-            return res.status(403).json({ message: "You're not in this group" });
+            return res.status(403).json({ message: "You're not in this book" });
         }
 
         const photoColor = await getPhotoColor(req.body);

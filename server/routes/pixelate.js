@@ -33,7 +33,7 @@ function checkOptions(cols, colors, palette) {
 router.get('/group/:groupId', async (req, res) => {
     const groupId = req.params.groupId.toLowerCase();
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(groupId)) {
-        return res.status(400).json({ message: "Group id must be a uuid" });
+        return res.status(400).json({ message: "Book id must be a uuid" });
     }
 
     try {
@@ -52,7 +52,7 @@ router.get('/group/:groupId/match', async (req, res) => {
     const groupId = req.params.groupId.toLowerCase();
     const color = String(req.query.color ?? '').toLowerCase();
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(groupId)) {
-        return res.status(400).json({ message: "Group id must be a uuid" });
+        return res.status(400).json({ message: "Book id must be a uuid" });
     }
     if (!/^#[0-9a-f]{6}$/.test(color)) {
         return res.status(400).json({ message: "color must be #rrggbb (write # as %23 in the URL)" });

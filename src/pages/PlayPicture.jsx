@@ -448,7 +448,7 @@ export default function PlayPicture({ groupId, onScored, onPopupChange, children
                         </dl>
 
                         {!groupId && (
-                            <p className="play-picture-popup-hint">pick a group first</p>
+                            <p className="play-picture-popup-hint">pick a book first</p>
                         )}
 
                         <div className="play-picture-popup-actions">
