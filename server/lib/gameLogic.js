@@ -1,5 +1,5 @@
 const pool = require('../db');
-const { GameError } = require('./groupGame');
+const { GameError, getGroupGrid, getColorOwners } = require('./groupGame');
 const { greyscalePalette } = require('./greyscale');
 
 async function getGroupProgress(groupId) {
@@ -26,7 +26,27 @@ async function applyGameState(groupId, grid) {
     };
 }
 
+// Writes every palette colour this player owns in the group to public.user_colors, one row each
+// with score 0. Rows that already exist are left as they are, so calling it again never resets a
+// score. Returns the player's colours as '#rrggbb'.
+async function saveUserColors(groupId, userId) {
+    const { palette } = await getGroupGrid(groupId);
+    const owners = await getColorOwners(groupId, palette);
+    const colors = owners.filter((o) => o.userId === userId).map((o) => palette[o.paletteIndex]);
+
+    if (colors.length > 0) {
+        await pool.query(
+            `insert into public.user_colors (group_id, user_id, color_id, score)
+             select $1, $2, unnest($3::text[]), 0
+             on conflict (group_id, user_id, color_id) do nothing`,
+            [groupId, userId, colors]
+        );
+    }
+    return colors;
+}
+
 module.exports = {
+    saveUserColors,
     getGroupProgress,
     isGreyscale,
     applyGameState,

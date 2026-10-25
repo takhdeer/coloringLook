@@ -20,6 +20,7 @@ const getUserGroup = require('./routes/groups/getUserGroup')
 const pixelate = require('./routes/pixelate')
 const spawn = require('./routes/spawn')
 const photoColor = require('./routes/photoColor')
+const userColors = require('./routes/userColors')
 
 
 // Endpoints
@@ -33,6 +34,7 @@ app.use('/api/getUserGroup', getUserGroup);
 app.use('/api/pixelate', pixelate);
 app.use('/api/spawn', spawn);
 app.use('/api/photoColor', photoColor);
+app.use('/api/userColors', userColors);
 
 // Test endpoints 
 app.get("/db-test", async (_req, res) => {
