@@ -18,11 +18,11 @@ export default function App() {
           <Route path="/landing" element={<Landing />} />
           <Route path="/groups" element={<CreateGroup />} />
           <Route path="/join" element={<JoinGroup />} />
-          <Route path='/play' element={<Play />} />
+          <Route path="/play" element={<Play />} />
           <Route path="/play/:groupId" element={<Play />} />
           <Route path='/comp/view/groups' element={< ViewGroups />} />
           <Route path='/spawn' element={< Spawn />} />
         </Routes>
       </BrowserRouter>
     )
-} 
+}

@@ -5,20 +5,10 @@
     text-align: center;
 }
 
-/* One div per cell; thin gaps show the grid lines */
+/* One div per cell. No background of its own: empty cells are transparent, so only the
+   picture shows, and the 1px gaps let the page show through so each square stands apart */
 .play-grid {
     display: grid;
     gap: 1px;
     width: 100%;
-    padding: 1px;
-    background: rgba(0, 0, 0, 0.15);
-    border: 2px solid #111;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-/* Transparent parts of the picture: tan hatching, darker than off-white so light picture
-   colours still stand out against it */
-.play-grid-cell-empty {
-    background: repeating-linear-gradient(45deg, #cfc7b4 0 2px, #c2b9a4 2px 4px);
 }

@@ -49,7 +49,6 @@ export default function PlayPictureGrid({ groupId }) {
             {picture.grid.flatMap((row, y) => row.map((cell, x) => (
                 <div
                     key={`${x},${y}`}
-                    className={cell === null ? 'play-grid-cell-empty' : undefined}
                     style={cell === null ? undefined : { background: picture.palette[cell] }}
                 />
             )))}

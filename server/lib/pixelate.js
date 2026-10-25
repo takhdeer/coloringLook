@@ -159,4 +159,49 @@ function matchPaletteColor(color, palette) {
     return { paletteIndex, color: palette[paletteIndex], distance: Math.round(distance) };
 }
 
-module.exports = { pixelate, matchPaletteColor };
+// Matching a photo's colour to a picture colour has to forgive lighting (a blue in shadow is still
+// blue) but never equate different colours (blue isn't green), so it compares hue for coloured
+// colours and brightness for greys/whites/blacks, and never matches one kind with the other.
+const PHOTO_HUE_TOLERANCE = 35;          // degrees on the colour wheel
+const PHOTO_NEUTRAL_CHROMA = 0.2;        // below this (0-1), a colour counts as grey/white/black
+const PHOTO_LIGHTNESS_TOLERANCE = 30;    // CIELAB L, 0-100, for comparing greys
+
+// The candidate colour a photo colour counts as, or null if it isn't close to any of them.
+// Returns { color, index, difference } where difference is degrees of hue (coloured) or
+// lightness points (greys); smaller is closer.
+function matchPhotoColor(photoColor, candidates) {
+    const photo = hexToRgb(photoColor);
+    let best = null;
+    candidates.forEach((hex, index) => {
+        const difference = photoDifference(photo, hexToRgb(hex));
+        if (difference !== null && (!best || difference < best.difference)) {
+            best = { color: hex, index, difference: Math.round(difference) };
+        }
+    });
+    return best;
+}
+
+function photoDifference(photo, ref) {
+    const chroma = (c) => (Math.max(...c) - Math.min(...c)) / 255;
+    const photoNeutral = chroma(photo) < PHOTO_NEUTRAL_CHROMA;
+    const refNeutral = chroma(ref) < PHOTO_NEUTRAL_CHROMA;
+    if (photoNeutral !== refNeutral) return null;
+
+    if (refNeutral) {
+        const d = Math.abs(rgbToLab(photo)[0] - rgbToLab(ref)[0]);
+        return d <= PHOTO_LIGHTNESS_TOLERANCE ? d : null;
+    }
+    let d = Math.abs(hue(photo) - hue(ref));
+    d = Math.min(d, 360 - d);
+    return d <= PHOTO_HUE_TOLERANCE ? d : null;
+}
+
+// Position on the colour wheel, 0-360 (red 0, yellow 60, green 120, blue 240)
+function hue([r, g, b]) {
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+    if (d === 0) return 0;
+    const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return (h * 60 + 360) % 360;
+}
+
+module.exports = { pixelate, matchPaletteColor, matchPhotoColor };
