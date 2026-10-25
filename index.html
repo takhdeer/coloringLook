@@ -7,6 +7,19 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
   </head>
   <body>
+    <!-- Wobble filters for the hand-drawn "line boil" on borders (see scribble-boil in src/index.css).
+         Each one is the same distortion with a different noise seed; the animation steps between them. -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+      <defs>
+        <filter id="scribble-0" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="1" seed="1" /><feDisplacementMap in="SourceGraphic" scale="7.2" xChannelSelector="R" yChannelSelector="G" /></filter>
+        <filter id="scribble-1" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="1" seed="7" /><feDisplacementMap in="SourceGraphic" scale="7.2" xChannelSelector="R" yChannelSelector="G" /></filter>
+        <filter id="scribble-2" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="1" seed="13" /><feDisplacementMap in="SourceGraphic" scale="7.2" xChannelSelector="R" yChannelSelector="G" /></filter>
+        <!-- Gentler versions for inputs and images, where the content wobbles with the border -->
+        <filter id="scribble-soft-0" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="1" seed="1" /><feDisplacementMap in="SourceGraphic" scale="3.6" xChannelSelector="R" yChannelSelector="G" /></filter>
+        <filter id="scribble-soft-1" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="1" seed="7" /><feDisplacementMap in="SourceGraphic" scale="3.6" xChannelSelector="R" yChannelSelector="G" /></filter>
+        <filter id="scribble-soft-2" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="1" seed="13" /><feDisplacementMap in="SourceGraphic" scale="3.6" xChannelSelector="R" yChannelSelector="G" /></filter>
+      </defs>
+    </svg>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>

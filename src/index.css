@@ -199,3 +199,77 @@ textarea {
   color: var(--ink-muted);
   font-style: italic;
 }
+
+/* Hand-drawn "line boil" like skribbl.io: every border jumps between a few wobbly
+   versions of itself (the SVG filters in index.html) a few times a second.
+   Boxes hide their real border and redraw it on ::after, so only the line wobbles, not
+   the text inside. Inputs and images can't have ::after, so they get a gentler filter
+   on the whole element. A new bordered class has to be added to the lists below. */
+
+@keyframes scribble-boil {
+  0% { filter: url(#scribble-0); }
+  33% { filter: url(#scribble-1); }
+  67% { filter: url(#scribble-2); }
+}
+
+@keyframes scribble-boil-soft {
+  0% { filter: url(#scribble-soft-0); }
+  33% { filter: url(#scribble-soft-1); }
+  67% { filter: url(#scribble-soft-2); }
+}
+
+/* :where keeps this at zero specificity, so a page's own position: absolute/fixed wins */
+:where(
+  .panel, .ink-btn, .landing-auth-btn, .login-btn, .signup-btn, .dashboard-btn,
+  .play-col, .play-members, .play-members-row, .play-members-dot, .play-members-invite-btn,
+  .play-picture-hover-btn, .play-picture-popup, .play-picture-meta, .play-picture-popup-btn,
+  .play-picture-swatch, .play-picture-compare,
+  .play-completed-popup, .play-completed-close, .play-completed-player, .play-completed-dot,
+  .create-group-add, .create-group-chip, .group-book-progress
+) {
+  position: relative;
+}
+
+.panel, .ink-btn, .landing-auth-btn, .login-btn, .signup-btn, .dashboard-btn,
+.play-col, .play-members, .play-members-row, .play-members-dot, .play-members-invite-btn,
+.play-picture-hover-btn, .play-picture-popup, .play-picture-meta, .play-picture-popup-btn,
+.play-picture-swatch, .play-picture-compare,
+.play-completed-popup, .play-completed-close, .play-completed-player, .play-completed-dot,
+.create-group-add, .create-group-chip, .group-book-progress {
+  border-color: transparent !important;
+
+  &::after {
+    content: '';
+    position: absolute;
+    /* Sit exactly over the hidden border */
+    inset: calc(-1 * var(--scribble-width, 2px));
+    border: var(--scribble-width, 2px) var(--scribble-style, solid) var(--ink);
+    border-radius: inherit;
+    pointer-events: none;
+    animation: scribble-boil 0.6s steps(1, end) infinite;
+  }
+}
+
+.play-members-dot,
+.play-completed-dot {
+  --scribble-width: 1.5px;
+}
+
+.create-group-chip {
+  --scribble-style: dashed;
+}
+
+.form-control,
+.play-members-invite-input,
+.play-picture-popup-img {
+  animation: scribble-boil-soft 0.6s steps(1, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form-control,
+  .play-members-invite-input,
+  .play-picture-popup-img,
+  *::after {
+    animation: none !important;
+  }
+}
