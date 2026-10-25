@@ -33,7 +33,10 @@ export default function Play() {
     // the points for the photo that finished the picture, then the celebration. The picture also
     // holds back its highlighter animation until it closes.
     const [uploadPopupOpen, setUploadPopupOpen] = useState(false)
-    const showCompleted = Boolean(groupId) && completedGroup === groupId && !uploadPopupOpen
+    // It also waits for the highlighter to finish painting the newly filled-in cells, so the player
+    // sees the picture complete before the popup covers it
+    const [pictureAnimating, setPictureAnimating] = useState(false)
+    const showCompleted = Boolean(groupId) && completedGroup === groupId && !uploadPopupOpen && !pictureAnimating
     // Latest progress for the progress bar, kept with the group it belongs to so switching groups
     // doesn't flash the old group's value
     const [progressFor, setProgressFor] = useState({ groupId: null, value: 0 })
@@ -73,6 +76,7 @@ export default function Play() {
                             groupId={groupId}
                             refreshKey={pictureVersion}
                             onProgress={handleProgress}
+                            onAnimatingChange={setPictureAnimating}
                             paused={uploadPopupOpen}
                         />
                     </PlayPicture>
