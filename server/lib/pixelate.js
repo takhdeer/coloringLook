@@ -192,9 +192,31 @@ function matchPaletteColor(color, palette) {
 // Matching a photo's colour to a picture colour has to forgive lighting (a blue in shadow is still
 // blue) but never equate different colours (blue isn't green), so it compares hue for coloured
 // colours and brightness for greys/whites/blacks, and never matches one kind with the other.
+// Two coloured colours match if they're within PHOTO_HUE_TOLERANCE degrees, or if they're in the
+// same colour family below (so pure blue counts as a cyan-ish blue, though they're 44° apart).
 const PHOTO_HUE_TOLERANCE = 35;          // degrees on the colour wheel
 const PHOTO_NEUTRAL_CHROMA = 0.2;        // below this (0-1), a colour counts as grey/white/black
 const PHOTO_LIGHTNESS_TOLERANCE = 30;    // CIELAB L, 0-100, for comparing greys
+
+// The colour names people use, as ranges of hue (degrees, start inclusive, up to the next start).
+// Blue includes cyan, teal and navy; red wraps around 360.
+const COLOR_FAMILIES = [
+    { name: 'red', from: 345 },
+    { name: 'orange', from: 15 },
+    { name: 'yellow', from: 40 },
+    { name: 'green', from: 70 },
+    { name: 'blue', from: 165 },
+    { name: 'purple', from: 255 },
+    { name: 'pink', from: 290 },
+];
+
+// The family a hue (0-360) belongs to, e.g. 240 -> 'blue'
+function colorFamily(hueDegrees) {
+    const sorted = [...COLOR_FAMILIES].sort((a, b) => a.from - b.from);
+    let family = sorted[sorted.length - 1].name; // below the first start wraps to the last (red)
+    for (const f of sorted) if (hueDegrees >= f.from) family = f.name;
+    return family;
+}
 
 // The candidate colour a photo colour counts as, or null if it isn't close to any of them.
 // Returns { color, index, difference } where difference is degrees of hue (coloured) or
@@ -210,15 +232,19 @@ function matchPhotoColor(photoColor, candidates) {
 }
 
 // How close a photo colour is to each candidate, for showing the player. One entry per candidate:
-// { color, index, kind, difference, tolerance, close } where kind is 'hue' (both coloured,
-// difference in degrees), 'lightness' (both grey, difference in CIELAB L) or 'mismatch' (one
-// coloured and one grey, never close; difference and tolerance are null).
+// { color, index, kind, difference, tolerance, close, family, photoFamily, sameFamily } where kind
+// is 'hue' (both coloured, difference in degrees), 'lightness' (both grey, difference in CIELAB L)
+// or 'mismatch' (one coloured and one grey, never close; difference and tolerance are null).
+// For 'hue', family/photoFamily are the colour names (e.g. 'blue') and a same-family pair is close
+// even beyond the tolerance; for the other kinds they're null.
 function comparePhotoColor(photoColor, candidates) {
     const photo = hexToRgb(photoColor);
     return candidates.map((hex, index) => {
-        const { kind, difference, tolerance } = photoDifference(photo, hexToRgb(hex));
+        const { kind, difference, tolerance, family, photoFamily } = photoDifference(photo, hexToRgb(hex));
         const rounded = difference === null ? null : Math.round(difference);
-        return { color: hex, index, kind, difference: rounded, tolerance, close: difference !== null && difference <= tolerance };
+        const sameFamily = kind === 'hue' && family === photoFamily;
+        const close = difference !== null && (difference <= tolerance || sameFamily);
+        return { color: hex, index, kind, difference: rounded, tolerance, close, family, photoFamily, sameFamily };
     });
 }
 
@@ -226,15 +252,19 @@ function photoDifference(photo, ref) {
     const chroma = (c) => (Math.max(...c) - Math.min(...c)) / 255;
     const photoNeutral = chroma(photo) < PHOTO_NEUTRAL_CHROMA;
     const refNeutral = chroma(ref) < PHOTO_NEUTRAL_CHROMA;
-    if (photoNeutral !== refNeutral) return { kind: 'mismatch', difference: null, tolerance: null };
+    if (photoNeutral !== refNeutral) return { kind: 'mismatch', difference: null, tolerance: null, family: null, photoFamily: null };
 
     if (refNeutral) {
         const d = Math.abs(rgbToLab(photo)[0] - rgbToLab(ref)[0]);
-        return { kind: 'lightness', difference: d, tolerance: PHOTO_LIGHTNESS_TOLERANCE };
+        return { kind: 'lightness', difference: d, tolerance: PHOTO_LIGHTNESS_TOLERANCE, family: null, photoFamily: null };
     }
-    let d = Math.abs(hue(photo) - hue(ref));
+    const photoHue = hue(photo), refHue = hue(ref);
+    let d = Math.abs(photoHue - refHue);
     d = Math.min(d, 360 - d);
-    return { kind: 'hue', difference: d, tolerance: PHOTO_HUE_TOLERANCE };
+    return {
+        kind: 'hue', difference: d, tolerance: PHOTO_HUE_TOLERANCE,
+        family: colorFamily(refHue), photoFamily: colorFamily(photoHue),
+    };
 }
 
 // Position on the colour wheel, 0-360 (red 0, yellow 60, green 120, blue 240)
