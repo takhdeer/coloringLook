@@ -38,7 +38,7 @@ router.get('/group/:groupId', async (req, res) => {
 
     try {
         const grid = await getGroupGrid(groupId);
-        // Owners are matched on the real palette; the game state may then swap in a grey one
+        // Owners are matched on the real palette; the game state adds which cells are filled in
         const owners = await getColorOwners(groupId, grid.palette);
         return res.status(200).json({ groupId, ...await applyGameState(groupId, grid), owners });
     } catch (err) {
