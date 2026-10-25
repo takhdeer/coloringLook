@@ -121,3 +121,50 @@
     justify-content: center;
     padding-top: 0.5rem;
 }
+
+.create-group-picture {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.create-group-preview {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border: 2px solid #111;
+    border-radius: 12px;
+}
+
+.create-group-upload {
+    padding: 8px 18px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111;
+    background: transparent;
+    border: 2px solid #111;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.create-group-upload:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.create-group-upload:active {
+    transform: scale(0.98);
+}
+
+.create-group-upload:disabled {
+    cursor: wait;
+    opacity: 0.6;
+}
+
+.create-group-file {
+    margin: 6px 0 0;
+    color: #555;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}

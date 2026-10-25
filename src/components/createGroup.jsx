@@ -1,7 +1,8 @@
 import './createGroup.css'
 import { useNavigate } from 'react-router'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase.mjs'
+import { isHeic, toBrowserImage } from '../lib/heicImage'
 
 export default function CreateGroup() {
     const navigate = useNavigate()
@@ -9,6 +10,18 @@ export default function CreateGroup() {
     const [friend, setFriend] = useState('')
     const [friends, setFriends] = useState([])
     const [errorMessage, setErrorMessage] = useState('')
+    const [picture, setPicture] = useState(null)
+    const [previewUrl, setPreviewUrl] = useState('')
+    const [preparingPicture, setPreparingPicture] = useState(false)
+    const [creating, setCreating] = useState(false)
+    const pictureInputRef = useRef(null)
+
+    // Free the old preview when the picture changes or the page closes
+    useEffect(() => {
+        return () => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl)
+        }
+    }, [previewUrl])
 
     const handleBack = () => navigate('/play')
 
@@ -36,10 +49,38 @@ export default function CreateGroup() {
         setFriends(friends.filter((f) => f !== name))
     }
 
+    const handlePictureChange = async (e) => {
+        const original = e.target.files?.[0]
+        // Clear the input so picking the same file again still fires onChange
+        e.target.value = ''
+        if (!original) return
+        if (!original.type.startsWith('image/') && !isHeic(original)) {
+            setErrorMessage('That file is not an image')
+            return
+        }
+
+        setPreparingPicture(true)
+        try {
+            const file = await toBrowserImage(original)
+            setPicture(file)
+            setPreviewUrl(URL.createObjectURL(file))
+            setErrorMessage('')
+        } catch (err) {
+            console.log('Could not convert the picture', err)
+            setErrorMessage('Could not read that picture')
+        } finally {
+            setPreparingPicture(false)
+        }
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault()
         if (!roomName.trim()) {
             setErrorMessage('Give your room a name')
+            return
+        }
+        if (!picture) {
+            setErrorMessage('Pick a picture to colour')
             return
         }
         if (friends.length === 0) {
@@ -47,6 +88,15 @@ export default function CreateGroup() {
             return
         }
         setErrorMessage('')
+        setCreating(true)
+        try {
+            await createRoom()
+        } finally {
+            setCreating(false)
+        }
+    }
+
+    const createRoom = async () => {
 
         // getUser is async and returns { data, error }
         const { data: authData, error } = await supabase.auth.getUser()
@@ -73,9 +123,23 @@ export default function CreateGroup() {
             setErrorMessage('Server Error')
             return
         }
-        
+        const { groupId } = await res.json()
+
+        const pictureName = picture.name.replace(/\.[^.]+$/, '')
+        const imageRes = await fetch(
+            `/api/groupImage?groupId=${groupId}&name=${encodeURIComponent(pictureName)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': picture.type },
+            body: picture,
+        })
+        if (!imageRes.ok) {
+            const data = await imageRes.json().catch(() => ({}))
+            setErrorMessage(data.message ?? 'Could not upload the picture')
+            return
+        }
+
         console.log('Created room', { groupName: roomName.trim(), groupMembers: friends })
-        navigate('/dashboard')
+        navigate('/play')
     }
 
     return (
@@ -98,6 +162,32 @@ export default function CreateGroup() {
                         placeholder="the crayon crew"
                         value={roomName}
                         onChange={(e) => setRoomName(e.target.value)} />
+                </div>
+
+                <div className="create-group-field">
+                    <label htmlFor="picture" className="form-label">
+                        picture
+                    </label>
+                    <input
+                        type="file"
+                        id="picture"
+                        accept="image/*,.heic,.heif"
+                        hidden
+                        ref={pictureInputRef}
+                        onChange={handlePictureChange} />
+                    <div className="create-group-picture">
+                        {previewUrl ? (
+                            <img src={previewUrl} alt="picture to colour" className="create-group-preview" />
+                        ) : null}
+                        <button
+                            type="button"
+                            className="create-group-upload"
+                            disabled={preparingPicture}
+                            onClick={() => pictureInputRef.current?.click()}>
+                            {preparingPicture ? 'loading…' : picture ? 'change picture' : 'upload picture'}
+                        </button>
+                    </div>
+                    {picture ? <p className="create-group-file">{picture.name}</p> : null}
                 </div>
 
                 <div className="create-group-field">
@@ -145,8 +235,9 @@ export default function CreateGroup() {
                 <div className="create-group-submit">
                     <button 
                         type="submit" 
-                        className="dashboard-btn">
-                        create room
+                        className="dashboard-btn"
+                        disabled={creating || preparingPicture}>
+                        {creating ? 'creating…' : 'create room'}
                     </button>
                 </div>
             </form>

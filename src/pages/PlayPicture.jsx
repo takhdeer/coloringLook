@@ -3,6 +3,7 @@ import ExifReader from 'exifreader'
 import './PlayPicture.css'
 import uploadIcon from '../assets/upload-or-camera.svg'
 import { supabase } from '../lib/supabase.mjs'
+import { isHeic, toBrowserImage } from '../lib/heicImage'
 
 // Turns a byte count into something readable, like "2.4 MB"
 function formatFileSize(bytes) {
@@ -56,26 +57,6 @@ function formatCoordinates(location) {
         return 'undefined'
     }
     return location.latitude.toFixed(5) + ', ' + location.longitude.toFixed(5)
-}
-
-// iPhone photos are HEIC by default. Some browsers leave file.type empty for them, so check the name too
-function isHeic(file) {
-    return file.type === 'image/heic' || file.type === 'image/heif' || /\.hei[cf]$/i.test(file.name)
-}
-
-// Most browsers (and the server's image library) can't decode HEIC, so convert it to a JPEG first.
-// Other images are returned unchanged. The converter is only downloaded when a HEIC photo is picked.
-async function toBrowserImage(file) {
-    if (!isHeic(file)) {
-        return file
-    }
-
-    const { heicTo } = await import('heic-to')
-    const jpeg = await heicTo({ blob: file, type: 'image/jpeg', quality: 0.9 })
-    return new File([jpeg], file.name.replace(/\.hei[cf]$/i, '') + '.jpg', {
-        type: 'image/jpeg',
-        lastModified: file.lastModified,
-    })
 }
 
 // Asks the server for a photo's most prominent colour ('#rrggbb'), or null if it couldn't find one
