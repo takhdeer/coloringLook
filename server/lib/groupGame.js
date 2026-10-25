@@ -58,7 +58,7 @@ async function getGroupGrid(groupId) {
         const file = await loadImageFile(imageId);
         let grid;
         try {
-            grid = await pixelate(file, { cols: GRID_COLS, colors: GRID_COLORS, minDistance: GRID_MIN_COLOR_DISTANCE, square: true });
+            grid = await pixelate(file, { cols: GRID_COLS, colors: GRID_COLORS, minDistance: GRID_MIN_COLOR_DISTANCE, square: true, dropWhite: true });
         } catch (err) {
             console.log(err);
             throw new GameError(422, "Stored file could not be read as an image");

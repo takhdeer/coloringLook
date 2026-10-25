@@ -8,7 +8,9 @@ const sharp = require('sharp');
 // square: true makes the grid cols × cols: empty (transparent) edges around the drawing are
 // trimmed off, then it's fitted inside keeping its shape, centred, with the leftover margin
 // transparent (null cells). Otherwise rows follow the image's aspect ratio.
-async function pixelate(input, { cols = 32, colors = 8, palette, minDistance = 0, square = false } = {}) {
+// dropWhite: true removes near-white colours from the palette and leaves their cells empty (null),
+// since white on the light page background can't visibly be coloured in.
+async function pixelate(input, { cols = 32, colors = 8, palette, minDistance = 0, square = false, dropWhite = false } = {}) {
     // density only matters for SVGs: rasterise them sharp enough before shrinking
     let image = sharp(input, { density: 300 });
     if (square) {
@@ -53,7 +55,26 @@ async function pixelate(input, { cols = 32, colors = 8, palette, minDistance = 0
         grid.push(row);
     }
 
+    if (dropWhite) {
+        // Squares already assigned to a white colour become empty rather than moving to another
+        // colour, so white areas don't turn yellow or grey; the remaining colours are renumbered
+        const keep = centers.map((c) => !isNearWhite(c));
+        const newIndex = [];
+        let next = 0;
+        keep.forEach((k, i) => { newIndex[i] = k ? next++ : null; });
+        centers = centers.filter((_, i) => keep[i]);
+        grid.forEach((row) => row.forEach((cell, x) => { if (cell !== null) row[x] = newIndex[cell]; }));
+    }
+
     return { cols, rows, palette: centers.map(rgbToHex), grid };
+}
+
+// Very light and barely tinted (whites, off-whites, pale cream); CIELAB lightness and chroma
+const WHITE_MIN_LIGHTNESS = 85;
+const WHITE_MAX_CHROMA = 15;
+function isNearWhite(rgb) {
+    const [L, a, b] = rgbToLab(rgb);
+    return L >= WHITE_MIN_LIGHTNESS && Math.hypot(a, b) <= WHITE_MAX_CHROMA;
 }
 
 // Picks k representative colours from a list of [r, g, b]
