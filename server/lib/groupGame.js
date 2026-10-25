@@ -109,9 +109,12 @@ async function getColorOwners(groupId, palette) {
     let members = await getMembers(groupId);
     const ownerOf = (hex) => members.find((m) => m.colors.includes(hex));
     const unowned = palette.filter((hex) => !ownerOf(hex));
+    // Colours a player holds that aren't in the palette any more (e.g. white after it was made
+    // empty space, or shades from an older grid size) would otherwise linger on the leaderboard
+    const stale = members.some((m) => m.colors.some((c) => !palette.includes(c)));
 
-    if (unowned.length > 0 && members.length > 0) {
-        // Anything in colors that isn't in this picture's palette (e.g. old test data) is dropped
+    if ((unowned.length > 0 || stale) && members.length > 0) {
+        // Anything in colors that isn't in this picture's palette is dropped
         const owned = members.map((m) => m.colors.filter((c) => palette.includes(c)));
         for (const hex of unowned) {
             let pick = 0;
