@@ -58,12 +58,13 @@ export default function Spawn() {
                 return
             }
             setMessage('Spawn point set')
+            // Only once it's saved: on an error, stay here so the message shows and they can try again
+            navigate('/play')
         } catch (err) {
             console.log(err)
             setMessage('Server Error')
         } finally {
             setIsSubmitting(false)
-            navigate('/play')
         }
     }
 
