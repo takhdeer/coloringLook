@@ -13,7 +13,9 @@ export default function JoinGroup() {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        if (!groupId.trim()) {
+        // Pasted ids often carry spaces or a line break
+        const id = groupId.trim()
+        if (!id) {
             setErrorMessage('Enter a group id')
             return
         }
@@ -36,16 +38,17 @@ export default function JoinGroup() {
         const res = await fetch('http://localhost:3001/api/joinGroup', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ groupId, member: userId})
+            body: JSON.stringify({ groupId: id, member: userId})
         });
+        const data = await res.json().catch(() => ({}))
 
-        if (!res.ok) {
-            const data = await res.json().catch(() => ({}))
-            setErrorMessage(res.status === 409 ? data.message : 'Server Error')
+        // Joined, or already a member: either way, open the group
+        if (res.ok || data.groupId) {
+            navigate(`/play/${data.groupId ?? id}`)
             return
         }
-        
-        console.log('Join room', { groupId: groupId.trim() })
+
+        setErrorMessage(data.message || 'Server Error')
     }
 
     return (
