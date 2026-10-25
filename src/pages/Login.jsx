@@ -61,7 +61,7 @@ function Login() {
         }
       }
 
-      navigate('/dashboard')
+      navigate(data.spawnpoint ? '/play' : '/spawn')
     } catch (err) {
       console.error(err)
       setErrorMessage(err.name === 'AbortError' ? 'Login timed out' : 'Could not reach the server')

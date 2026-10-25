@@ -1,4 +1,4 @@
-import '../pages/Dashboard.css'
+import '../pages/Spawn.css'
 import './joinGroup.css'
 import { useNavigate } from 'react-router'
 import { useState } from 'react'

@@ -22,9 +22,9 @@
 }
 
 .dashboard-actions {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
     justify-content: center;
+    align-items: center;
     gap: 16px;
 }
 
@@ -48,4 +48,28 @@
 
 .dashboard-btn:active {
     transform: scale(0.98);
+}
+
+/* Keeps the address input and location button on one line */
+.spawn-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.spawn-location-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+/* Full width puts the label on its own line inside the wrapping actions row */
+.form-label {
+    width: 100%;
+    text-align: center;
+}
+
+/* Full width puts the status message on its own line under the buttons */
+.spawn-message {
+    width: 100%;
+    margin: 0;
+    text-align: center;
 }
