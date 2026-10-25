@@ -61,7 +61,8 @@ export default function PlayPictureGrid({ groupId }) {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         picture.grid.forEach((row, y) => row.forEach((cell, x) => {
             if (cell === null) return
-            ctx.fillStyle = picture.palette[cell]
+            // Filled-in cells show their colour, the rest stay grey until that colour's score fills them
+            ctx.fillStyle = picture.filled[y][x] ? picture.palette[cell] : picture.greyPalette[cell]
             ctx.fillRect(x * square, y * square, square - gap, square - gap)
         }))
     }, [picture, boxWidth])
