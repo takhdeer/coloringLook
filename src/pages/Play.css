@@ -54,12 +54,18 @@
     }
 }
 
-/* Dev-only "auto complete" button, pinned to the top left */
-.play-autocomplete {
+/* Dev-only "auto complete" / "almost complete" buttons, pinned to the top left */
+.play-dev-tools {
     position: fixed;
     top: 16px;
     left: 16px;
     z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.play-dev-btn {
     padding: 8px 14px;
     font-family: inherit;
     font-size: 14px;
@@ -72,15 +78,15 @@
     transition: background 0.2s, transform 0.1s;
 }
 
-.play-autocomplete:hover {
+.play-dev-btn:hover {
     background: #ddd6c8;
 }
 
-.play-autocomplete:active {
+.play-dev-btn:active {
     transform: scale(0.95);
 }
 
-.play-autocomplete:disabled {
+.play-dev-btn:disabled {
     opacity: 0.6;
     cursor: default;
 }

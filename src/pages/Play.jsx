@@ -54,13 +54,18 @@ export default function Play() {
         setCompletedGroup(null)
     }
 
-    // Testing shortcut (dev builds only): fills in the whole picture, then reloads it so the
-    // highlighter paints the rest in and the "completed!" popup follows
+    // Testing shortcuts (dev builds only): fill in the whole picture, or all of it but a few cells of
+    // one colour (leaveOne), then reload it so the highlighter paints the new cells in and, when
+    // it's finished, the "completed!" popup follows
     const [autoCompleting, setAutoCompleting] = useState(false)
-    const handleAutoComplete = async () => {
+    const handleAutoComplete = async (leaveOne) => {
         setAutoCompleting(true)
         try {
-            const res = await fetch(`/api/completeGroup/${groupId}`, { method: 'POST' })
+            const res = await fetch(`/api/completeGroup/${groupId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ leaveOne }),
+            })
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}))
                 console.log('Could not complete the picture', data.message || res.status)
@@ -79,14 +84,24 @@ export default function Play() {
     return (
         <div className="play">
             {import.meta.env.DEV && groupId && (
-                <button
-                    type="button"
-                    className="play-autocomplete"
-                    onClick={handleAutoComplete}
-                    disabled={autoCompleting}
-                >
-                    {autoCompleting ? 'completing...' : 'auto complete'}
-                </button>
+                <div className="play-dev-tools">
+                    <button
+                        type="button"
+                        className="play-dev-btn"
+                        onClick={() => handleAutoComplete(false)}
+                        disabled={autoCompleting}
+                    >
+                        auto complete
+                    </button>
+                    <button
+                        type="button"
+                        className="play-dev-btn"
+                        onClick={() => handleAutoComplete(true)}
+                        disabled={autoCompleting}
+                    >
+                        almost complete
+                    </button>
+                </div>
             )}
 
             <h1 className="play-logo">
