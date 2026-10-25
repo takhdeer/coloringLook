@@ -54,9 +54,10 @@ function Signup() {
             setError("Account created, but we couldn't log you in. Try logging in.");
             return;
           }
-          navigate("/dashboard");
+          navigate("/spawn");
         } else {
           setNotice("Account created! Check your email to confirm it, then log in.");
+          navigate('/login')
         }
       } else {
         setError(data.message || "Something went wrong.");

@@ -80,7 +80,7 @@ export default function Spawn() {
                         type='button'
                         className='login-btn'
                         onClick={handleUseLocation}>
-                        use my location
+                         {isSubmitting? 'Geting Location...': 'Get Location'}
                     </button>
                 <button
                     type='submit'

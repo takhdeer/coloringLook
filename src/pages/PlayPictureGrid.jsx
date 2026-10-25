@@ -70,8 +70,9 @@ function findSwipes(picture, seen) {
 // Changing refreshKey loads the picture again (e.g. after a score fills in more cells).
 // onProgress(progress) is called with the group's progress (0-100) every time the picture loads.
 // While paused (e.g. a popup covers the picture), newly filled-in cells wait grey and get painted
-// on once it's unpaused.
-export default function PlayPictureGrid({ groupId, refreshKey, onProgress, paused = false }) {
+// on once it's unpaused. onAnimatingChange(animating) is called with true while there are newly
+// filled-in cells still to highlight (waiting or mid-animation) and false once they're all done.
+export default function PlayPictureGrid({ groupId, refreshKey, onProgress, onAnimatingChange, paused = false }) {
     const [picture, setPicture] = useState(null)
     const [error, setError] = useState(null)
     const boxRef = useRef(null)
@@ -86,6 +87,15 @@ export default function PlayPictureGrid({ groupId, refreshKey, onProgress, pause
     const animStartRef = useRef(null)
     // ?paint=1 on the Play page's URL highlights the whole picture on its first load, to preview the animation
     const previewPaintRef = useRef(new URLSearchParams(window.location.search).has('paint'))
+    const onAnimatingRef = useRef(onAnimatingChange)
+    onAnimatingRef.current = onAnimatingChange
+
+    // A layout effect, so the parent hears about new swipes before the browser paints: otherwise
+    // something waiting on the animation (the "completed!" popup) could flash up for a frame
+    const animating = swipes.length > 0
+    useLayoutEffect(() => {
+        onAnimatingRef.current?.(animating)
+    }, [animating])
 
     useEffect(() => {
         if (!groupId) return
