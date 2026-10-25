@@ -132,6 +132,7 @@ const RESULT_TITLES = {
 
 // onScored is called after a matched photo's points are saved.
 // onPopupChange(open) is called whenever the confirm or result popup opens or closes, so the page
+// can hold back the picture's animation until the player is done with this one.
 // can hold back other popups (like "completed!") until the player is done with this one.
 export default function PlayPicture({ groupId, onScored, onPopupChange, children }) {
     const fileInputRef = useRef(null)
@@ -185,7 +186,7 @@ export default function PlayPicture({ groupId, onScored, onPopupChange, children
         const handleKeyDown = (event) => {
             if (event.key === 'Escape') {
                 setPending(null)
-                setResult(null)
+                handleCloseResult()
             }
         }
 
@@ -344,7 +345,12 @@ export default function PlayPicture({ groupId, onScored, onPopupChange, children
         setSubmitting(false)
     }
 
+    // Once the points are saved, closing the popup reloads the page so everything shows the new scores
     const handleCloseResult = () => {
+        if (result && result.score && !result.score.error) {
+            window.location.reload()
+            return
+        }
         setResult(null)
     }
 

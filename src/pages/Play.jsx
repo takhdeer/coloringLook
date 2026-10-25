@@ -24,6 +24,11 @@ export default function Play() {
     // group list with the new progress
     const [pictureVersion, setPictureVersion] = useState(0)
     const [searchParams] = useSearchParams()
+    // TODO(progress): set this to true once the group's picture is complete. Until that's linked,
+    // add ?completed=1 to the Play page's URL to preview the popup.
+    const [showCompleted, setShowCompleted] = useState(searchParams.has('completed'))
+    // While the upload's confirm/result popup is open, the picture holds back its highlighter animation
+    const [uploadPopupOpen, setUploadPopupOpen] = useState(false)
     // The "completed!" popup opens once the group's progress reaches 100 (only a fully filled-in
     // picture is 100). Add ?completed=1 to the Play page's URL to preview it any time.
     // It's tied to the group it opened for, so switching groups in the left panel closes it.
@@ -62,6 +67,11 @@ export default function Play() {
                         onScored={() => setPictureVersion((v) => v + 1)}
                         onPopupChange={setUploadPopupOpen}
                     >
+                        <PlayPictureGrid
+                            groupId={groupId}
+                            refreshKey={pictureVersion}
+                            paused={uploadPopupOpen}
+                        />
                         <PlayPictureGrid groupId={groupId} refreshKey={pictureVersion} onProgress={handleProgress} />
                     </PlayPicture>
                 </section>
