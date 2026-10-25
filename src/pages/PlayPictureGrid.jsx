@@ -72,7 +72,6 @@ function findSwipes(picture, seen) {
 // While paused (e.g. a popup covers the picture), newly filled-in cells wait grey and get painted
 // on once it's unpaused.
 export default function PlayPictureGrid({ groupId, refreshKey, onProgress, paused = false }) {
-export default function PlayPictureGrid({ groupId, refreshKey, onProgress }) {
     const [picture, setPicture] = useState(null)
     const [error, setError] = useState(null)
     const boxRef = useRef(null)
