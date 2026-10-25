@@ -169,6 +169,7 @@ async function matchPlayerColor(groupId, userId, photoColor) {
 }
 
 module.exports = {
+    BUCKET,
     GameError,
     getPhotoColor,
     matchPlayerColor,

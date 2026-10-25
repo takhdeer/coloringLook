@@ -23,7 +23,7 @@ Useful manual checks: `GET /api/health`, and `GET /db-test` to check the Postgre
 
 There are two separate `.env` files, and both are gitignored:
 - **Root `.env`** is read by Vite: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `FRONTEND_URL`
-- **`server/.env`** is loaded explicitly by `server/index.js`: `DATABASE_URL` (Supabase Postgres, SSL with cert verification off), `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and optionally `PORT`
+- **`server/.env`** is loaded explicitly by `server/index.js`: `DATABASE_URL` (Supabase Postgres, SSL with cert verification off), `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (needed for uploading group pictures to Storage; `supabaseAdmin` in `server/lib/supabase.js`), and optionally `PORT`
 
 ## Structure
 

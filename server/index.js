@@ -25,6 +25,7 @@ const userColors = require('./routes/userColors')
 const checkUser = require('./routes/checkUser')
 
 const score = require('./routes/score')
+const groupImage = require('./routes/groupImage')
 
 // Endpoints
 app.use('/api/register', registerRoute);
@@ -41,6 +42,7 @@ app.use('/api/photoColor', photoColor);
 app.use('/api/userColors', userColors);
 app.use('/api/checkUser', checkUser);
 app.use('/api/score', score);
+app.use('/api/groupImage', groupImage);
 
 // Test endpoints 
 app.get("/db-test", async (_req, res) => {

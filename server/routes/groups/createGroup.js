@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
                     , [groupId, member]
                 )
             }
-            return res.status(201).json({message: "Group Created Sucessfully"})
+            return res.status(201).json({message: "Group Created Sucessfully", groupId})
         } catch (err) {
             console.log(err)
             return res.status(500).json({error: "Database Error", details: err})
