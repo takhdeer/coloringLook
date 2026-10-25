@@ -97,9 +97,12 @@ export default function PlayPictureGrid({ groupId, refreshKey, onProgress, pause
                     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
                     const seen = previewPaintRef.current ? emptySeen(data) : loadSeen(groupId)
                     previewPaintRef.current = false
-                    setSwipes(reduceMotion ? [] : findSwipes(data, seen))
+                    const found = reduceMotion ? [] : findSwipes(data, seen)
+                    setSwipes(found)
                     animStartRef.current = null
-                    saveSeen(groupId, data)
+                    // Cells only count as seen once they've been highlighted, so if the page reloads while
+                    // a popup holds the animation back, it plays after the reload instead
+                    if (found.length === 0) saveSeen(groupId, data)
                     setPicture(data)
                     setError(null)
                 }
@@ -176,7 +179,10 @@ export default function PlayPictureGrid({ groupId, refreshKey, onProgress, pause
 
         let frame = null
         const drawFrame = (now) => {
-            if (animStartRef.current === null) animStartRef.current = now
+            if (animStartRef.current === null) {
+                animStartRef.current = now
+                saveSeen(groupId, picture)
+            }
             const elapsed = now - animStartRef.current
             drawBase()
 
@@ -240,7 +246,7 @@ export default function PlayPictureGrid({ groupId, refreshKey, onProgress, pause
         }
         frame = requestAnimationFrame(drawFrame)
         return () => cancelAnimationFrame(frame)
-    }, [picture, boxWidth, swipes, paused])
+    }, [groupId, picture, boxWidth, swipes, paused])
 
     if (!groupId) {
         return <p className="play-grid-message">pick a group on the left to see its picture</p>

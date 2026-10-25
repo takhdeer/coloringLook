@@ -17,6 +17,8 @@ export default function Play() {
     // TODO(progress): set this to true once the group's picture is complete. Until that's linked,
     // add ?completed=1 to the Play page's URL to preview the popup.
     const [showCompleted, setShowCompleted] = useState(searchParams.has('completed'))
+    // While the upload's confirm/result popup is open, the picture holds back its highlighter animation
+    const [uploadPopupOpen, setUploadPopupOpen] = useState(false)
 
     return (
         <div className="play">
@@ -39,7 +41,6 @@ export default function Play() {
                         <PlayPictureGrid
                             groupId={groupId}
                             refreshKey={pictureVersion}
-                            onProgress={handleProgress}
                             paused={uploadPopupOpen}
                         />
                     </PlayPicture>
