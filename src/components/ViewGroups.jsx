@@ -178,7 +178,7 @@ export default function ViewGroups({ refreshKey }) {
     return (
         <div className="heading">
             <div className='top-bar'>
-            <h2 className="play-members-title">Books</h2>
+            <h2 className="play-members-title">books</h2>
             <div className="dashboard-actions">
                 <button className="dashboard-btn" onClick={() => navigate('/join')}>
                     join book

@@ -43,8 +43,32 @@
     min-width: 1.2em;
 }
 
-.play-members-name {
+/* .play-members-row.is-first {
+    background: rgba(245, 197, 24, 0.18);
+} */
+
+/* The signed-in player's own row */
+.play-members-row.is-me {
+    background: rgba(245, 197, 24, 0.38);
+}
+
+
+/* Name plus the crown, which sits right after the name rather than by the score */
+.play-members-who {
     flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .play-members-crown {
+        animation: none;
+    }
+}
+
+.play-members-name {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -55,10 +79,12 @@
     font-size: 20px;
 }
 
+/* A row of crayons standing in a box */
 .play-members-colors {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    align-items: flex-end;
+    gap: 0;
     margin-top: 8px;
 }
 
@@ -66,11 +92,13 @@
     display: none;
 }
 
-.play-members-dot {
-    width: 16px;
-    height: 16px;
-    border: 1.5px solid #111;
-    border-radius: 50%;
+.play-members-crayon {
+    display: block;
+    transition: transform 0.15s ease;
+}
+
+.play-members-crayon:hover {
+    transform: translateY(-3px);
 }
 
 .play-members-empty {
