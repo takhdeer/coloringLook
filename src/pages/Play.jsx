@@ -31,8 +31,17 @@ export default function Play() {
                 </section>
 
                 <section className="play-col play-main">
-                    <PlayPicture groupId={groupId} onScored={() => setPictureVersion((v) => v + 1)}>
-                        <PlayPictureGrid groupId={groupId} refreshKey={pictureVersion} />
+                    <PlayPicture
+                        groupId={groupId}
+                        onScored={() => setPictureVersion((v) => v + 1)}
+                        onPopupChange={setUploadPopupOpen}
+                    >
+                        <PlayPictureGrid
+                            groupId={groupId}
+                            refreshKey={pictureVersion}
+                            onProgress={handleProgress}
+                            paused={uploadPopupOpen}
+                        />
                     </PlayPicture>
                 </section>
 
