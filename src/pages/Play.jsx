@@ -9,7 +9,8 @@ import PlayPictureGrid from './PlayPictureGrid'
 
 export default function Play() {
     const { groupId } = useParams()
-    // Goes up each time a photo scores, so the grid reloads and shows the newly filled-in cells
+    // Goes up each time a photo scores, so the grid reloads with the newly filled-in cells and the
+    // group list with the new progress
     const [pictureVersion, setPictureVersion] = useState(0)
 
     return (
@@ -21,7 +22,7 @@ export default function Play() {
             <main className="play-columns">
                 {/* TODO: left column content */}
                 <section className="play-col play-side">
-                    <ViewGroups />
+                    <ViewGroups refreshKey={pictureVersion} />
                 </section>
 
                 <section className="play-col play-main">

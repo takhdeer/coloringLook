@@ -1,4 +1,5 @@
 const pool = require('../db');
+const { progressPercent } = require('./scoring');
 
 // Each score point fills 1% of that colour's cells, so a score of 40 fills 40% of them
 const MAX_FILL_PERCENT = 100;
@@ -78,9 +79,19 @@ function buildFill(imageId, grid, palette, scores) {
     return { filled, fill };
 }
 
+// The group's progress for public.groups.progress from buildFill's `fill`: the share of the
+// picture's cells that are filled in, so big colours count for more than small ones (whole percent,
+// see progressPercent)
+function progressFromFill(fill) {
+    const filledCells = fill.reduce((sum, f) => sum + f.filledCells, 0);
+    const totalCells = fill.reduce((sum, f) => sum + f.totalCells, 0);
+    return progressPercent(totalCells ? filledCells * 100 / totalCells : 0);
+}
+
 module.exports = {
     fillPercent,
     fillOrder,
     getColorScores,
     buildFill,
+    progressFromFill,
 };

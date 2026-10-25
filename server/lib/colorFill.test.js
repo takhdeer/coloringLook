@@ -1,5 +1,5 @@
 const { describe, test, expect } = require('bun:test');
-const { fillPercent, fillOrder, buildFill } = require('./colorFill');
+const { fillPercent, fillOrder, buildFill, progressFromFill } = require('./colorFill');
 
 // A 10 × 10 picture: the top half is red (palette 0), the bottom half blue (palette 1), except one
 // transparent cell in each half
@@ -86,5 +86,34 @@ describe('buildFill', () => {
         expect(filled[0][0]).toBe(0);
         expect(filled[9][9]).toBe(0);
         expect(filledCount(filled)).toBe(98);
+    });
+});
+
+describe('progressFromFill', () => {
+    const fill = (filledCells, totalCells) => ({ filledCells, totalCells });
+
+    test('is the share of all cells that are filled in, so big colours count for more', () => {
+        // 30 of 60 + 0 of 40 -> 30% of the picture
+        expect(progressFromFill([fill(30, 60), fill(0, 40)])).toBe(30);
+    });
+
+    test('nothing filled is 0, everything filled is 100', () => {
+        expect(progressFromFill([fill(0, 60), fill(0, 40)])).toBe(0);
+        expect(progressFromFill([fill(60, 60), fill(40, 40)])).toBe(100);
+    });
+
+    test('any filled cell counts as at least 1%, and almost done is 99%', () => {
+        expect(progressFromFill([fill(1, 1000)])).toBe(1);
+        expect(progressFromFill([fill(999, 1000)])).toBe(99);
+    });
+
+    test('a picture with no cells is 0', () => {
+        expect(progressFromFill([])).toBe(0);
+    });
+
+    test('matches buildFill for a real grid', () => {
+        // 40% of blue's 49 cells is 20 of the picture's 98 cells -> 20%
+        const { fill: real } = buildFill(7, makeGrid(), palette, { '#0000ff': 40 });
+        expect(progressFromFill(real)).toBe(20);
     });
 });
