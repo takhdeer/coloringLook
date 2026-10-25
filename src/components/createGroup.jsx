@@ -4,6 +4,26 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase.mjs'
 import { isHeic, toBrowserImage } from '../lib/heicImage'
 
+// Same check as the invite endpoint (server/routes/groups/inviteGroup.js)
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// Emails one friend a join link for the group, like the leaderboard's invite box.
+// Returns null if it was sent, or the reason it wasn't.
+async function sendInvite(groupId, inviterId, email) {
+    try {
+        const res = await fetch('/api/inviteGroup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupId, inviterId, email }),
+        })
+        if (res.ok) return null
+        const data = await res.json().catch(() => ({}))
+        return data.message || data.error || `status ${res.status}`
+    } catch {
+        return 'could not reach the server'
+    }
+}
+
 export default function CreateGroup() {
     const navigate = useNavigate()
     const [roomName, setRoomName] = useState('')
@@ -14,6 +34,8 @@ export default function CreateGroup() {
     const [previewUrl, setPreviewUrl] = useState('')
     const [preparingPicture, setPreparingPicture] = useState(false)
     const [creating, setCreating] = useState(false)
+    // Set when the room was made but some invites didn't go through, so the player can still go in
+    const [createdGroupId, setCreatedGroupId] = useState(null)
     const pictureInputRef = useRef(null)
 
     // Free the old preview when the picture changes or the page closes
@@ -26,13 +48,17 @@ export default function CreateGroup() {
     const handleBack = () => navigate('/play')
 
     const handleAddFriend = () => {
-        const name = friend.trim()
-        if (!name) return
-        if (friends.includes(name)) {
-            setErrorMessage(`${name} is already invited`)
+        const email = friend.trim().toLowerCase()
+        if (!email) return
+        if (!EMAIL_RE.test(email)) {
+            setErrorMessage(`${email} isn't an email address`)
             return
         }
-        setFriends([...friends, name])
+        if (friends.includes(email)) {
+            setErrorMessage(`${email} is already invited`)
+            return
+        }
+        setFriends([...friends, email])
         setFriend('')
         setErrorMessage('')
     }
@@ -112,7 +138,7 @@ export default function CreateGroup() {
         }
         const userId = authData.user.id
 
-        // TODO: friends are usernames, but the backend expects user ids
+        // The room starts with just its creator; friends join from the emailed link
         const res = await fetch('http://localhost:3001/api/createGroup', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -120,7 +146,8 @@ export default function CreateGroup() {
         });
 
         if (!res.ok) {
-            setErrorMessage('Server Error')
+            const data = await res.json().catch(() => ({}))
+            setErrorMessage(data.message ?? 'Server Error')
             return
         }
         const { groupId } = await res.json()
@@ -138,8 +165,20 @@ export default function CreateGroup() {
             return
         }
 
-        console.log('Created room', { groupName: roomName.trim(), groupMembers: friends })
-        navigate('/play')
+        // Email every friend a join link now that the room (and its picture) exists
+        const reasons = await Promise.all(friends.map((email) => sendInvite(groupId, userId, email)))
+        const failed = friends
+            .map((email, i) => (reasons[i] ? `${email} (${reasons[i]})` : null))
+            .filter(Boolean)
+
+        if (failed.length > 0) {
+            // The room is made either way; stay here so the player sees which invites didn't go out
+            setCreatedGroupId(groupId)
+            setErrorMessage(`Room created, but these invites weren't sent: ${failed.join(', ')}. ` +
+                'You can invite them again from the room.')
+            return
+        }
+        navigate(`/play/${groupId}`)
     }
 
     return (
@@ -196,10 +235,10 @@ export default function CreateGroup() {
                     </label>
                     <div className="create-group-invite">
                         <input
-                            type="text"
+                            type="email"
                             className="form-control"
                             id="friend"
-                            placeholder="username"
+                            placeholder="friend@example.com"
                             value={friend}
                             onChange={(e) => setFriend(e.target.value)}
                             onKeyDown={handleFriendKeyDown} />
@@ -233,12 +272,21 @@ export default function CreateGroup() {
                 {errorMessage ? <p className="create-group-error">{errorMessage}</p> : null}
 
                 <div className="create-group-submit">
-                    <button 
-                        type="submit" 
-                        className="dashboard-btn"
-                        disabled={creating || preparingPicture}>
-                        {creating ? 'creating…' : 'create room'}
-                    </button>
+                    {createdGroupId ? (
+                        <button
+                            type="button"
+                            className="dashboard-btn"
+                            onClick={() => navigate(`/play/${createdGroupId}`)}>
+                            go to room
+                        </button>
+                    ) : (
+                        <button
+                            type="submit"
+                            className="dashboard-btn"
+                            disabled={creating || preparingPicture}>
+                            {creating ? 'creating…' : 'create room'}
+                        </button>
+                    )}
                 </div>
             </form>
         </div>
