@@ -40,7 +40,6 @@ export default function JoinGroup() {
         const res = await fetch('http://localhost:3001/api/joinGroup', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ groupId: id, member: userId})
             body: JSON.stringify({ groupId: groupId.trim(), member: userId})
         });
         const data = await res.json().catch(() => ({}))
