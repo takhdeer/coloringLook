@@ -6,6 +6,11 @@ const { scoreImage } = require('../lib/scoring');
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
+// Reads the uploaded photo as raw bytes whatever Content-Type the browser sent: phones, AirDrop and
+// some folders give files a blank type (or application/octet-stream). sharp checks the bytes
+// themselves, so something that isn't an image still gets "Could not read that photo".
+const readPhoto = express.raw({ type: () => true, limit: '15mb' });
+
 // POST /api/photoColor?userId=<uuid>&groupId=<uuid>
 // Body: the photo file itself (Content-Type image/*), e.g. fetch(url, { method: 'POST', body: file })
 // Finds the photo's most prominent colour and matches it to the player's own colours in the
@@ -18,7 +23,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 //   no_colours  200 { status, message, photoColor }  the player owns no colours yet
 // comparisons is how close the photo colour is to each of the player's colours (see
 // comparePhotoColor in lib/pixelate.js).
-router.post('/', express.raw({ type: 'image/*', limit: '15mb' }), async (req, res) => {
+router.post('/', readPhoto, async (req, res) => {
     const userId = String(req.query.userId ?? '').toLowerCase();
     const groupId = String(req.query.groupId ?? '').toLowerCase();
 
@@ -26,7 +31,7 @@ router.post('/', express.raw({ type: 'image/*', limit: '15mb' }), async (req, re
         return res.status(400).json({ message: "userId and groupId must be uuids" });
     }
     if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
-        return res.status(400).json({ message: "Send the photo as the request body with an image/* Content-Type" });
+        return res.status(400).json({ message: "Send the photo as the request body" });
     }
 
     try {
@@ -66,9 +71,9 @@ router.post('/', express.raw({ type: 'image/*', limit: '15mb' }), async (req, re
 // POST /api/photoColor/extract
 // Body: the photo file itself (Content-Type image/*). Only finds the photo's most prominent colour,
 // so the page can show it before the player confirms: 200 { photoColor }. Nothing is stored.
-router.post('/extract', express.raw({ type: 'image/*', limit: '15mb' }), async (req, res) => {
+router.post('/extract', readPhoto, async (req, res) => {
     if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
-        return res.status(400).json({ message: "Send the photo as the request body with an image/* Content-Type" });
+        return res.status(400).json({ message: "Send the photo as the request body" });
     }
 
     try {
