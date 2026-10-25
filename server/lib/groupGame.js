@@ -1,6 +1,6 @@
 const pool = require('../db');
 const { supabase } = require('./supabase');
-const { pixelate, matchPaletteColor, matchPhotoColor } = require('./pixelate');
+const { pixelate, matchPaletteColor, matchPhotoColor, comparePhotoColor } = require('./pixelate');
 
 // Supabase Storage bucket holding the image files; public.images.path is a file name in here
 const BUCKET = 'images';
@@ -150,13 +150,18 @@ async function getPhotoColor(photo) {
 }
 
 // Matches a photo's colour against the colours this player owns in the group's picture (only
-// those are accepted). Returns { match, colors } where match is matchPhotoColor's result (null if
-// it's too different from all of them) and colors is the player's own colours.
+// those are accepted). Returns { match, colors, comparisons } where match is matchPhotoColor's
+// result (null if it's too different from all of them), colors is the player's own colours and
+// comparisons is comparePhotoColor's closeness to each of them.
 async function matchPlayerColor(groupId, userId, photoColor) {
     const { palette } = await getGroupGrid(groupId);
     const owners = await getColorOwners(groupId, palette);
     const colors = owners.filter((o) => o.userId === userId).map((o) => palette[o.paletteIndex]);
-    return { match: colors.length ? matchPhotoColor(photoColor, colors) : null, colors };
+    return {
+        match: colors.length ? matchPhotoColor(photoColor, colors) : null,
+        colors,
+        comparisons: comparePhotoColor(photoColor, colors),
+    };
 }
 
 module.exports = {
