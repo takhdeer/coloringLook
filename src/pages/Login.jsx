@@ -93,7 +93,9 @@ function Login() {
           <input 
             type="email" 
             className="form-control" 
-            id="email" 
+            id="email"
+            name="email"
+            autoComplete="email"
             placeholder="name@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}/>
@@ -109,6 +111,8 @@ function Login() {
             type="password" 
             className="form-control" 
             id="Password"
+            name="password"
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}/>
         </div>

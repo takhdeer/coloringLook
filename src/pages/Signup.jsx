@@ -18,7 +18,8 @@ function Signup() {
   const [notice, setNotice] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSignUp = async () => {
+  const handleSignUp = async (e) => {
+    e.preventDefault();
     setError("");
     setNotice("");
 
@@ -76,7 +77,7 @@ function Signup() {
          <button className="back-btn" onClick={handleLanding}>
            {"<"}
          </button>                          
-      <div className="signup-card">
+      <form className="signup-card" onSubmit={handleSignUp}>
         <h1 className="signup-header">
           <img src={signUpTitle} alt="sign up!!" />
         </h1>
@@ -87,6 +88,8 @@ function Signup() {
             type="text"
             className="form-control"
             id="username"
+            name="username"
+            autoComplete="username"
             placeholder="e.g. TheLegend27"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -99,6 +102,8 @@ function Signup() {
             type="email"
             className="form-control"
             id="email"
+            name="email"
+            autoComplete="email"
             placeholder="name@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -111,6 +116,8 @@ function Signup() {
             type="password"
             className="form-control"
             id="Password"
+            name="password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -122,6 +129,8 @@ function Signup() {
             type="password"
             className="form-control"
             id="confirmPassword"
+            name="confirmPassword"
+            autoComplete="new-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
@@ -132,15 +141,14 @@ function Signup() {
 
         <div className="submit">
           <button
-            type="button"
+            type="submit"
             className="signup-btn"
-            onClick={handleSignUp}
             disabled={isSubmitting}
           >
             {isSubmitting ? "signing up..." : "sign up"}
           </button>
         </div>
-      </div>
+      </form>
     </div>
     </div>
   );
