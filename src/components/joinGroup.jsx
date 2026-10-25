@@ -1,12 +1,14 @@
 import '../pages/Spawn.css'
 import './joinGroup.css'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { useState } from 'react'
 import { supabase } from '../lib/supabase.mjs'
 
 export default function JoinGroup() {
     const navigate = useNavigate()
-    const [groupId, setGroupId] = useState('')
+    const [searchParams] = useSearchParams()
+    // Invite emails link to /join?groupId=...
+    const [groupId, setGroupId] = useState(searchParams.get('groupId') ?? '')
     const [errorMessage, setErrorMessage] = useState('')
 
     const handleBack = () => navigate('/play')
@@ -39,6 +41,7 @@ export default function JoinGroup() {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ groupId: id, member: userId})
+            body: JSON.stringify({ groupId: groupId.trim(), member: userId})
         });
         const data = await res.json().catch(() => ({}))
 
@@ -49,6 +52,7 @@ export default function JoinGroup() {
         }
 
         setErrorMessage(data.message || 'Server Error')
+        navigate(`/play/${encodeURIComponent(groupId.trim())}`)
     }
 
     return (

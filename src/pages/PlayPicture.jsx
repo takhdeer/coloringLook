@@ -110,11 +110,15 @@ function savePhotoLocation(entry) {
 }
 
 // Turns one of the server's colour comparisons into text like "12° hue apart (within 35°)"
+// or "44° hue apart, but both blue"
 function describeComparison(comparison) {
     if (comparison.kind === 'mismatch') {
         return 'colour vs grey, no match'
     }
     if (comparison.kind === 'hue') {
+        if (comparison.sameFamily && comparison.difference > comparison.tolerance) {
+            return comparison.difference + '° hue apart, but both ' + comparison.family
+        }
         return comparison.difference + '° hue apart (within ' + comparison.tolerance + '°)'
     }
     return comparison.difference + ' lightness apart (within ' + comparison.tolerance + ')'
@@ -126,8 +130,10 @@ const RESULT_TITLES = {
     no_colours: 'no colours yet',
 }
 
-// onScored is called after a matched photo's points are saved
-export default function PlayPicture({ groupId, onScored, children }) {
+// onScored is called after a matched photo's points are saved.
+// onPopupChange(open) is called whenever the confirm or result popup opens or closes, so the page
+// can hold back other popups (like "completed!") until the player is done with this one.
+export default function PlayPicture({ groupId, onScored, onPopupChange, children }) {
     const fileInputRef = useRef(null)
 
     // The image waiting to be confirmed, or null when no popup is open.
@@ -163,6 +169,12 @@ export default function PlayPicture({ groupId, onScored, children }) {
             }
         }
     }, [result])
+
+    // Tell the page whether one of this component's popups is showing
+    const popupOpen = Boolean(pending || result)
+    useEffect(() => {
+        onPopupChange?.(popupOpen)
+    }, [popupOpen, onPopupChange])
 
     // Let the Escape key close whichever popup is open (but not while a photo is being checked)
     useEffect(() => {

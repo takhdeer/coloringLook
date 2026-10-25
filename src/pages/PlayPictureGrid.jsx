@@ -3,11 +3,15 @@ import './PlayPictureGrid.css'
 
 // The group's pixelated picture, drawn on a canvas so every square is exactly the same size.
 // Changing refreshKey loads the picture again (e.g. after a score fills in more cells).
-export default function PlayPictureGrid({ groupId, refreshKey }) {
+// onProgress(progress) is called with the group's progress (0-100) every time the picture loads.
+export default function PlayPictureGrid({ groupId, refreshKey, onProgress }) {
     const [picture, setPicture] = useState(null)
     const [error, setError] = useState(null)
     const boxRef = useRef(null)
     const canvasRef = useRef(null)
+    // Latest onProgress, so a new callback from the parent doesn't reload the picture
+    const onProgressRef = useRef(onProgress)
+    onProgressRef.current = onProgress
     // Width available for the grid, in CSS pixels; follows the column as the window resizes
     const [boxWidth, setBoxWidth] = useState(0)
 
@@ -23,6 +27,7 @@ export default function PlayPictureGrid({ groupId, refreshKey }) {
                 if (!cancelled) {
                     setPicture(data)
                     setError(null)
+                    onProgressRef.current?.(data.progress ?? 0)
                 }
             } catch (err) {
                 if (!cancelled) setError(err.message)
