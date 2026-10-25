@@ -22,7 +22,7 @@ export default function Play() {
                 </section>
 
                 <section className="play-col play-main">
-                    <PlayPicture>
+                    <PlayPicture groupId={groupId}>
                         <PlayPictureGrid groupId={groupId} />
                     </PlayPicture>
                 </section>

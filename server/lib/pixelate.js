@@ -179,30 +179,41 @@ const PHOTO_LIGHTNESS_TOLERANCE = 30;    // CIELAB L, 0-100, for comparing greys
 // Returns { color, index, difference } where difference is degrees of hue (coloured) or
 // lightness points (greys); smaller is closer.
 function matchPhotoColor(photoColor, candidates) {
-    const photo = hexToRgb(photoColor);
     let best = null;
-    candidates.forEach((hex, index) => {
-        const difference = photoDifference(photo, hexToRgb(hex));
-        if (difference !== null && (!best || difference < best.difference)) {
-            best = { color: hex, index, difference: Math.round(difference) };
+    for (const c of comparePhotoColor(photoColor, candidates)) {
+        if (c.close && (!best || c.difference < best.difference)) {
+            best = { color: c.color, index: c.index, difference: c.difference };
         }
-    });
+    }
     return best;
+}
+
+// How close a photo colour is to each candidate, for showing the player. One entry per candidate:
+// { color, index, kind, difference, tolerance, close } where kind is 'hue' (both coloured,
+// difference in degrees), 'lightness' (both grey, difference in CIELAB L) or 'mismatch' (one
+// coloured and one grey, never close; difference and tolerance are null).
+function comparePhotoColor(photoColor, candidates) {
+    const photo = hexToRgb(photoColor);
+    return candidates.map((hex, index) => {
+        const { kind, difference, tolerance } = photoDifference(photo, hexToRgb(hex));
+        const rounded = difference === null ? null : Math.round(difference);
+        return { color: hex, index, kind, difference: rounded, tolerance, close: difference !== null && difference <= tolerance };
+    });
 }
 
 function photoDifference(photo, ref) {
     const chroma = (c) => (Math.max(...c) - Math.min(...c)) / 255;
     const photoNeutral = chroma(photo) < PHOTO_NEUTRAL_CHROMA;
     const refNeutral = chroma(ref) < PHOTO_NEUTRAL_CHROMA;
-    if (photoNeutral !== refNeutral) return null;
+    if (photoNeutral !== refNeutral) return { kind: 'mismatch', difference: null, tolerance: null };
 
     if (refNeutral) {
         const d = Math.abs(rgbToLab(photo)[0] - rgbToLab(ref)[0]);
-        return d <= PHOTO_LIGHTNESS_TOLERANCE ? d : null;
+        return { kind: 'lightness', difference: d, tolerance: PHOTO_LIGHTNESS_TOLERANCE };
     }
     let d = Math.abs(hue(photo) - hue(ref));
     d = Math.min(d, 360 - d);
-    return d <= PHOTO_HUE_TOLERANCE ? d : null;
+    return { kind: 'hue', difference: d, tolerance: PHOTO_HUE_TOLERANCE };
 }
 
 // Position on the colour wheel, 0-360 (red 0, yellow 60, green 120, blue 240)
@@ -213,4 +224,4 @@ function hue([r, g, b]) {
     return (h * 60 + 360) % 360;
 }
 
-module.exports = { pixelate, matchPaletteColor, matchPhotoColor };
+module.exports = { pixelate, matchPaletteColor, matchPhotoColor, comparePhotoColor };

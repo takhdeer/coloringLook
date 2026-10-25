@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import ExifReader from 'exifreader'
 import './PlayPicture.css'
 import uploadIcon from '../assets/upload-or-camera.svg'
+import { supabase } from '../lib/supabase.mjs'
 
 // Turns a byte count into something readable, like "2.4 MB"
 function formatFileSize(bytes) {
@@ -57,12 +58,72 @@ function formatCoordinates(location) {
     return location.latitude.toFixed(5) + ', ' + location.longitude.toFixed(5)
 }
 
-export default function PlayPicture({children}) {
+// Asks the server for a photo's most prominent colour ('#rrggbb'), or null if it couldn't find one
+async function fetchPhotoColor(file) {
+    try {
+        const res = await fetch('/api/photoColor/extract', {
+            method: 'POST',
+            headers: { 'Content-Type': file.type },
+            body: file,
+        })
+        const data = await res.json()
+        return res.ok ? data.photoColor : null
+    } catch {
+        return null
+    }
+}
+
+// Where the checked photos' locations are kept in the browser
+const PHOTO_LOCATIONS_KEY = 'coloringlook.photoLocations'
+
+// Adds one checked photo's location to the list in localStorage.
+// Returns true if it was saved (false if the browser blocks storage).
+function savePhotoLocation(entry) {
+    try {
+        const saved = JSON.parse(localStorage.getItem(PHOTO_LOCATIONS_KEY) || '[]')
+        saved.push(entry)
+        localStorage.setItem(PHOTO_LOCATIONS_KEY, JSON.stringify(saved))
+        return true
+    } catch {
+        return false
+    }
+}
+
+// Turns one of the server's colour comparisons into text like "12° hue apart (within 35°)"
+function describeComparison(comparison) {
+    if (comparison.kind === 'mismatch') {
+        return 'colour vs grey, no match'
+    }
+    if (comparison.kind === 'hue') {
+        return comparison.difference + '° hue apart (within ' + comparison.tolerance + '°)'
+    }
+    return comparison.difference + ' lightness apart (within ' + comparison.tolerance + ')'
+}
+
+const RESULT_TITLES = {
+    matched: 'colour matched!',
+    no_match: 'not close enough',
+    no_colours: 'no colours yet',
+}
+
+export default function PlayPicture({ groupId, children }) {
     const fileInputRef = useRef(null)
 
     // The image waiting to be confirmed, or null when no popup is open.
     // Shape: { file, url, metadata }
     const [pending, setPending] = useState(null)
+
+    // The pending photo's most prominent colour, kept apart from pending so updating it doesn't
+    // free the preview URL. Shape: { file, color } where color is undefined while it's being found
+    // and null if it couldn't be found
+    const [pendingColor, setPendingColor] = useState(null)
+
+    // True while the confirmed photo is being checked by the server
+    const [submitting, setSubmitting] = useState(false)
+
+    // What the server said about the confirmed photo, or null when no result popup is open.
+    // Shape: { url, data } on success, { url, error } if the check failed
+    const [result, setResult] = useState(null)
 
     // Free the preview URL when the pending image changes or the component unmounts
     useEffect(() => {
@@ -73,15 +134,25 @@ export default function PlayPicture({children}) {
         }
     }, [pending])
 
-    // Let the Escape key close the popup while it is open
+    // Same for the result popup's copy of the photo
     useEffect(() => {
-        if (!pending) {
+        return () => {
+            if (result) {
+                URL.revokeObjectURL(result.url)
+            }
+        }
+    }, [result])
+
+    // Let the Escape key close whichever popup is open (but not while a photo is being checked)
+    useEffect(() => {
+        if ((!pending && !result) || submitting) {
             return
         }
 
         const handleKeyDown = (event) => {
             if (event.key === 'Escape') {
                 setPending(null)
+                setResult(null)
             }
         }
 
@@ -89,7 +160,7 @@ export default function PlayPicture({children}) {
         return () => {
             window.removeEventListener('keydown', handleKeyDown)
         }
-    }, [pending])
+    }, [pending, result, submitting])
 
     // The visible button forwards its click to the hidden file input,
     // which is what opens the file explorer (Finder on a Mac)
@@ -135,6 +206,12 @@ export default function PlayPicture({children}) {
                     location: location,
                 },
             })
+
+            // Find the main colour while the popup is open. If another photo was picked in the
+            // meantime, this answer is for the old one and is ignored
+            setPendingColor({ file: file, color: undefined })
+            const color = await fetchPhotoColor(file)
+            setPendingColor((current) => (current && current.file === file ? { file: file, color: color } : current))
         }
 
         // Catches files that claim to be images but are corrupt or unsupported
@@ -150,14 +227,56 @@ export default function PlayPicture({children}) {
     }
 
     const handleCancel = () => {
-        setPending(null)
+        if (!submitting) {
+            setPending(null)
+        }
     }
 
-    const handleConfirm = () => {
-        // TODO: do something with pending.file and pending.metadata
-        // (show it, upload it, save the metadata, etc.)
-        // For now, confirming just closes the popup
+    // Sends the photo to the server, which finds its most prominent colour and checks it
+    // against this player's colours, then swaps the confirm popup for the result popup
+    const handleConfirm = async () => {
+        const file = pending.file
+        const location = pending.metadata.location
+        setSubmitting(true)
+
+        let outcome
+        try {
+            const { data: authData, error } = await supabase.auth.getUser()
+            if (error || !authData.user) {
+                throw new Error('please log in again')
+            }
+
+            const res = await fetch(`/api/photoColor?userId=${authData.user.id}&groupId=${groupId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': file.type },
+                body: file,
+            })
+            // Some errors (like a photo over the size limit) don't come back as JSON
+            const data = await res.json().catch(() => ({}))
+            if (!res.ok) {
+                throw new Error(data.message || `status ${res.status}`)
+            }
+            // Photos without GPS data have nothing to save
+            const locationSaved = location !== null && savePhotoLocation({
+                latitude: location.latitude,
+                longitude: location.longitude,
+                color: data.photoColor,
+                groupId: groupId,
+                savedAt: new Date().toISOString(),
+            })
+            outcome = { data: data, location: location, locationSaved: locationSaved }
+        } catch (err) {
+            outcome = { error: err.message }
+        }
+
+        // The result popup gets its own preview URL, since the pending one is freed when pending clears
+        setResult({ ...outcome, url: URL.createObjectURL(file) })
         setPending(null)
+        setSubmitting(false)
+    }
+
+    const handleCloseResult = () => {
+        setResult(null)
     }
 
     return (
@@ -201,6 +320,25 @@ export default function PlayPicture({children}) {
                             alt="preview of the chosen image"
                         />
 
+                        {/* The photo's most prominent colour, once the server has found it */}
+                        {pendingColor && pendingColor.file === pending.file && (
+                            pendingColor.color ? (
+                                <div className="play-picture-result-color">
+                                    <span
+                                        className="play-picture-swatch"
+                                        style={{ background: pendingColor.color }}
+                                    />
+                                    <span>main colour {pendingColor.color}</span>
+                                </div>
+                            ) : (
+                                <p className="play-picture-popup-hint">
+                                    {pendingColor.color === undefined
+                                        ? 'finding main colour...'
+                                        : "couldn't find the main colour"}
+                                </p>
+                            )
+                        )}
+
                         <dl className="play-picture-meta">
                             <div className="play-picture-meta-row">
                                 <dt>name</dt>
@@ -234,11 +372,16 @@ export default function PlayPicture({children}) {
                             </div>
                         </dl>
 
+                        {!groupId && (
+                            <p className="play-picture-popup-hint">pick a group first</p>
+                        )}
+
                         <div className="play-picture-popup-actions">
                             <button
                                 type="button"
                                 className="play-picture-popup-btn"
                                 onClick={handleCancel}
+                                disabled={submitting}
                             >
                                 cancel
                             </button>
@@ -246,8 +389,105 @@ export default function PlayPicture({children}) {
                                 type="button"
                                 className="play-picture-popup-btn play-picture-popup-btn-confirm"
                                 onClick={handleConfirm}
+                                disabled={submitting || !groupId}
                             >
-                                confirm
+                                {submitting ? 'checking...' : 'confirm'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {result && (
+                <div className="play-picture-overlay" onClick={handleCloseResult}>
+                    <div
+                        className="play-picture-popup"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="play-picture-result-title"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <h2 id="play-picture-result-title" className="play-picture-popup-title">
+                            {result.error ? "couldn't check this photo" : RESULT_TITLES[result.data.status]}
+                        </h2>
+
+                        <img
+                            className="play-picture-popup-img"
+                            src={result.url}
+                            alt="the photo you uploaded"
+                        />
+
+                        {result.error && (
+                            <p className="play-picture-popup-hint">{result.error}</p>
+                        )}
+
+                        {result.data && (
+                            <>
+                                {/* The photo's most prominent colour */}
+                                <div className="play-picture-result-color">
+                                    <span
+                                        className="play-picture-swatch"
+                                        style={{ background: result.data.photoColor }}
+                                    />
+                                    <span>main colour {result.data.photoColor}</span>
+                                </div>
+
+                                <p className="play-picture-popup-hint">
+                                    {result.locationSaved
+                                        ? 'location ' + formatCoordinates(result.location) + ' saved'
+                                        : result.location
+                                            ? "couldn't save the location"
+                                            : 'this photo has no location'}
+                                </p>
+
+                                {result.data.status === 'matched' && (
+                                    <div className="play-picture-result-color">
+                                        <span
+                                            className="play-picture-swatch"
+                                            style={{ background: result.data.color }}
+                                        />
+                                        <span>counts as your {result.data.color}</span>
+                                    </div>
+                                )}
+
+                                {result.data.status === 'no_colours' && (
+                                    <p className="play-picture-popup-hint">{result.data.message}</p>
+                                )}
+
+                                {/* How close the photo's colour is to each of the player's colours */}
+                                {result.data.comparisons && (
+                                    <ul className="play-picture-compare">
+                                        {result.data.comparisons.map((comparison) => (
+                                            <li
+                                                key={comparison.color}
+                                                className={
+                                                    comparison.color === result.data.color
+                                                        ? 'play-picture-compare-row play-picture-compare-match'
+                                                        : 'play-picture-compare-row'
+                                                }
+                                            >
+                                                <span
+                                                    className="play-picture-swatch"
+                                                    style={{ background: comparison.color }}
+                                                />
+                                                <span className="play-picture-compare-text">
+                                                    {describeComparison(comparison)}
+                                                </span>
+                                                <span>{comparison.close ? 'close' : 'too far'}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </>
+                        )}
+
+                        <div className="play-picture-popup-actions">
+                            <button
+                                type="button"
+                                className="play-picture-popup-btn play-picture-popup-btn-confirm"
+                                onClick={handleCloseResult}
+                            >
+                                done
                             </button>
                         </div>
                     </div>
