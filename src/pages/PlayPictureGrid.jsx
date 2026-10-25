@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import './PlayPictureGrid.css'
 
-// The group's pixelated picture, drawn on a canvas so every square is exactly the same size
-export default function PlayPictureGrid({ groupId }) {
+// The group's pixelated picture, drawn on a canvas so every square is exactly the same size.
+// Changing refreshKey loads the picture again (e.g. after a score fills in more cells).
+export default function PlayPictureGrid({ groupId, refreshKey }) {
     const [picture, setPicture] = useState(null)
     const [error, setError] = useState(null)
     const boxRef = useRef(null)
@@ -30,7 +31,7 @@ export default function PlayPictureGrid({ groupId }) {
 
         load()
         return () => { cancelled = true }
-    }, [groupId])
+    }, [groupId, refreshKey])
 
     // Track the space the grid can use
     useLayoutEffect(() => {

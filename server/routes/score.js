@@ -2,7 +2,7 @@ const express = require("express");
 const pool = require("../db");
 const router = express.Router();
 const { GameError } = require('../lib/groupGame');
-const { saveUserColors } = require('../lib/gameLogic');
+const { saveUserColors, updateGroupProgress } = require('../lib/gameLogic');
 const { scoreImage } = require('../lib/scoring');
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -17,9 +17,10 @@ const DEG = Math.PI / 180; // multiply degrees by this to get radians
 // Steps 1-3: reads the player's spawnpoint, measures the distance to the photo (haversine, km).
 // Steps 4-5: scoreImage() turns the distance into points.
 // Then adds the points to that colour's score in public.user_colors and sets
-// public.group_members.score (what the leaderboard shows) to the sum of the player's colour scores.
-// Scores are whole numbers in the database, so the gain is rounded (2.5 -> 3).
-//   200 { color, distanceKm, base, bonus, gain, points, colorScore, newScore }
+// public.group_members.score (what the leaderboard shows) to the sum of the player's colour scores,
+// and public.groups.progress to how much of the picture is now coloured in (whole percent).
+// The gain is rounded to whole points (2.5 -> 3).
+//   200 { color, distanceKm, base, bonus, gain, points, colorScore, newScore, groupProgress }
 router.post('/', async (req, res) => {
     const body = req.body ?? {};
     const userId = String(body.userId ?? '').toLowerCase();
@@ -127,6 +128,8 @@ router.post('/', async (req, res) => {
                 [groupId, userId]
             );
 
+            const groupProgress = await updateGroupProgress(client, groupId);
+
             await client.query('commit');
 
             return res.status(200).json({
@@ -139,6 +142,7 @@ router.post('/', async (req, res) => {
                 points,
                 colorScore: colorRow.rows[0].score,
                 newScore: total.rows[0].score,
+                groupProgress,
             });
         } catch (err) {
             await client.query('rollback').catch(() => {});
