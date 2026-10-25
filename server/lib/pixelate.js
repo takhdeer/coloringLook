@@ -5,15 +5,24 @@ const sharp = require('sharp');
 // where grid[y][x] is the palette colour of that cell, or null if the cell is transparent.
 // minDistance (CIELAB ΔE, 0 = off) merges picked colours that look closer than that, so the
 // palette ends up with clearly different colours (fewer than `colors` if some were similar).
-async function pixelate(input, { cols = 32, colors = 8, palette, minDistance = 0 } = {}) {
+// square: true makes the grid cols × cols: empty (transparent) edges around the drawing are
+// trimmed off, then it's fitted inside keeping its shape, centred, with the leftover margin
+// transparent (null cells). Otherwise rows follow the image's aspect ratio.
+async function pixelate(input, { cols = 32, colors = 8, palette, minDistance = 0, square = false } = {}) {
     // density only matters for SVGs: rasterise them sharp enough before shrinking
-    const image = sharp(input, { density: 300 });
+    let image = sharp(input, { density: 300 });
+    if (square) {
+        // Trimming needs its own pass: sharp applies trim after resize within one pipeline
+        image = sharp(await image.ensureAlpha().trim({ threshold: 1 }).png().toBuffer());
+    }
     const { width, height } = await image.metadata();
-    const rows = Math.max(1, Math.round(cols * height / width));
+    const rows = square ? cols : Math.max(1, Math.round(cols * height / width));
 
     // Shrinking averages each block of the original into one pixel
     const { data } = await image
-        .resize(cols, rows, { fit: 'fill', kernel: 'cubic' })
+        .resize(cols, rows, square
+            ? { fit: 'contain', position: 'centre', background: { r: 0, g: 0, b: 0, alpha: 0 }, kernel: 'cubic' }
+            : { fit: 'fill', kernel: 'cubic' })
         .ensureAlpha()
         .raw()
         .toBuffer({ resolveWithObject: true });

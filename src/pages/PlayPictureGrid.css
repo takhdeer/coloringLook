@@ -5,10 +5,14 @@
     text-align: center;
 }
 
-/* One div per cell. No background of its own: empty cells are transparent, so only the
-   picture shows, and the 1px gaps let the page show through so each square stands apart */
+/* Takes the full width so the canvas knows how much room it has, and centres it */
 .play-grid {
-    display: grid;
-    gap: 1px;
     width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* Transparent wherever the picture is, so only the picture's squares show */
+.play-grid-canvas {
+    display: block;
 }

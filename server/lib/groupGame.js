@@ -5,8 +5,9 @@ const { pixelate, matchPaletteColor, matchPhotoColor } = require('./pixelate');
 // Supabase Storage bucket holding the image files; public.images.path is a file name in here
 const BUCKET = 'images';
 
-// Every group's picture is pixelated with these settings, so all players see the same cells
-const GRID_COLS = 96;
+// Every group's picture is pixelated with these settings, so all players see the same cells.
+// The canvas is a square GRID_COLS × GRID_COLS; the picture is fitted inside it, centred.
+const GRID_COLS = 128;
 const GRID_COLORS = 8;
 // Picked colours that look closer than this (CIELAB ΔE) are merged, so every palette colour is
 // clearly different and uploaded photos match one unambiguously. Usually leaves 4-6 colours.
@@ -57,7 +58,7 @@ async function getGroupGrid(groupId) {
         const file = await loadImageFile(imageId);
         let grid;
         try {
-            grid = await pixelate(file, { cols: GRID_COLS, colors: GRID_COLORS, minDistance: GRID_MIN_COLOR_DISTANCE });
+            grid = await pixelate(file, { cols: GRID_COLS, colors: GRID_COLORS, minDistance: GRID_MIN_COLOR_DISTANCE, square: true });
         } catch (err) {
             console.log(err);
             throw new GameError(422, "Stored file could not be read as an image");
