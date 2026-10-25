@@ -136,6 +136,25 @@ async function getColorOwners(groupId, palette) {
     });
 }
 
+// Whether the group's game is already going: its picture has a palette and every colour of it is
+// owned by a member. Reads the palette saved in public.images, so it doesn't pixelate anything;
+// a group whose picture hasn't been loaded yet (no saved palette) counts as not started.
+async function isGameInProgress(groupId) {
+    const result = await pool.query(
+        `select i.palette
+         from public.group_image gi
+         join public.images i on i.id = gi.image_id
+         where gi.group_id = $1
+         order by gi.created_at desc
+         limit 1`,
+        [groupId]
+    );
+    const palette = (result.rows[0]?.palette ?? []).map((c) => c.toLowerCase());
+    if (palette.length === 0) return false;
+    const members = await getMembers(groupId);
+    return palette.every((hex) => members.some((m) => m.colors.includes(hex)));
+}
+
 // The most prominent colour of an uploaded photo as '#rrggbb', found exactly like a group picture's
 // palette (same grid size, colour count and merging), then taking the colour that covers the most
 // area. The photo itself isn't kept anywhere.
@@ -176,4 +195,5 @@ module.exports = {
     getGroupGrid,
     getColorOwners,
     matchGroupColor,
+    isGameInProgress,
 };

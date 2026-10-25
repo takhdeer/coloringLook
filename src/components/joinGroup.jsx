@@ -40,7 +40,8 @@ export default function JoinGroup() {
         });
 
         if (!res.ok) {
-            setErrorMessage('Server Error')
+            const data = await res.json().catch(() => ({}))
+            setErrorMessage(res.status === 409 ? data.message : 'Server Error')
             return
         }
         
