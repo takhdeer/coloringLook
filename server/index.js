@@ -14,6 +14,7 @@ const registerRoute = require('./routes/register');
 const loginRoute = require('./routes/login')
 const createGroup = require('./routes/groups/createGroup')
 const deleteGroup = require('./routes/groups/deleteGroup')
+const leaveGroup = require('./routes/groups/leaveGroup')
 const leaderboard = require('./routes/groups/leaderboard')
 const joinGroup = require('./routes/groups/joinGroup')
 const getUserGroup = require('./routes/groups/getUserGroup')
@@ -28,6 +29,7 @@ app.use('/api/register', registerRoute);
 app.use('/api/login', loginRoute);
 app.use('/api/createGroup', createGroup);
 app.use('/api/deleteGroup', deleteGroup);
+app.use('/api/leaveGroup', leaveGroup);
 app.use('/api/leaderboard', leaderboard);
 app.use('/api/joinGroup', joinGroup);
 app.use('/api/getUserGroup', getUserGroup);

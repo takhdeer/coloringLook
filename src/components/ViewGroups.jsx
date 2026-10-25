@@ -1,8 +1,9 @@
 import '../pages/PlayMembersColumn.css'
 import './ViewGroups.css'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { supabase } from '../lib/supabase.mjs'
+import trashIcon from '../assets/trash-can.svg'
 
 async function getGroups(userId) {
     const res = await fetch(`http://localhost:3001/api/getUserGroup/${encodeURIComponent(userId)}`);
@@ -16,8 +17,22 @@ async function getGroups(userId) {
     return data.groups;
 };
 
+async function leaveGroup(groupId, userId) {
+    const res = await fetch(
+        `http://localhost:3001/api/leaveGroup/${encodeURIComponent(groupId)}/${encodeURIComponent(userId)}`,
+        { method: 'DELETE' }
+    );
+
+    if (!res.ok) {
+        console.log('Can not leave group')
+        throw new Error(`Request failed: ${res.status}`);
+    }
+};
+
 export default function ViewGroups() {
     const navigate = useNavigate()
+    const { groupId: openGroupId } = useParams()
+    const [userId, setUserId] = useState(null)
     const [groups, setGroups] = useState([])
     const [loading, setLoading] = useState(true)
     const [errorMessage, setErrorMessage] = useState('')
@@ -32,6 +47,8 @@ export default function ViewGroups() {
                 navigate('/login')
                 return
             }
+
+            if (!cancelled) setUserId(authData.user.id)
 
             try {
                 const userGroups = await getGroups(authData.user.id)
@@ -48,6 +65,21 @@ export default function ViewGroups() {
             cancelled = true
         }
     }, [navigate])
+
+    // The trash can on a row: leaves that group without also opening it
+    const handleLeave = async (event, group) => {
+        event.stopPropagation()
+        if (!userId || !window.confirm(`Leave "${group.name}"?`)) return
+
+        try {
+            await leaveGroup(group.id, userId)
+            setGroups((current) => current.filter((g) => g.id !== group.id))
+            // Don't keep showing the picture of a group the user just left
+            if (openGroupId === group.id) navigate('/play')
+        } catch (err) {
+            alert('Could not leave the group')
+        }
+    }
 
     return (
         <div className="heading">
@@ -86,6 +118,16 @@ export default function ViewGroups() {
                         >
                             <div className="play-members-header">
                                 <span className="play-members-name">{group.name}</span>
+                                <button
+                                    type="button"
+                                    className="group-leave-btn"
+                                    onClick={(e) => handleLeave(e, group)}
+                                    onKeyDown={(e) => e.stopPropagation()}
+                                    aria-label={`leave ${group.name}`}
+                                    title="leave group"
+                                >
+                                    <img className="group-leave-icon" src={trashIcon} alt="" />
+                                </button>
                                 <span className='play-members-score'>{group.progress}</span>
                             </div>
                         </li>
